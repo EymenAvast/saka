@@ -5,22 +5,22 @@
   <title>Giriş Kontrolü</title>
   <style>
     body {
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      color: #00ff99;
+      background: linear-gradient(135deg, #001f3f, #0074D9, #39CCCC);
+      color: #7FFFD4;
       font-family: 'Consolas', monospace;
       font-size: 18px;
       margin: 0;
       height: 100vh;
       display: flex;
       flex-direction: column;
-      justify-content: flex-start; /* Yukarı hizalama */
+      justify-content: flex-start; /* Yukarıya daha yakın */
       align-items: center;
       overflow: hidden;
-      padding-top: 50px; /* Üstten boşluk */
+      padding-top: 40px; /* biraz boşluk üstten */
     }
     #terminal {
-      background: rgba(0, 0, 0, 0.7);
-      border: 2px solid #00ff99;
+      background: rgba(0, 51, 51, 0.7);
+      border: 2px solid #7FFFD4;
       border-radius: 12px;
       padding: 30px 40px;
       width: 90%;
@@ -28,59 +28,65 @@
       min-height: 300px;
       overflow-y: auto;
       white-space: pre-line;
-      box-shadow: 0 0 15px #00ff99;
+      box-shadow: 0 0 15px #7FFFD4;
+      animation: neonGlow 2s infinite alternate;
+      user-select: none;
+    }
+    @keyframes neonGlow {
+      0%, 100% {
+        box-shadow: 0 0 5px #7FFFD4, 0 0 10px #7FFFD4, 0 0 20px #7FFFD4;
+      }
+      50% {
+        box-shadow: 0 0 15px #7FFFD4, 0 0 30px #7FFFD4, 0 0 40px #7FFFD4;
+      }
     }
     .background-code {
       position: fixed;
       top: 0;
       left: 0;
-      width: 100%;
+      width: 200%; /* genişlettik kaydırma için */
       height: 100%;
       pointer-events: none;
-      color: rgba(0, 255, 153, 0.1);
+      color: rgba(127, 255, 212, 0.1);
       font-size: 14px;
-      animation: scroll 20s linear infinite;
+      animation: scrollHorizontal 30s linear infinite;
       z-index: 0;
       font-family: monospace;
       user-select: none;
       line-height: 1.3;
-      padding: 20px;
+      padding: 20px 0;
+      white-space: nowrap;
     }
-    @keyframes scroll {
-      0% { transform: translateY(0); }
-      100% { transform: translateY(-100%); }
+    @keyframes scrollHorizontal {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
     }
     #rickButton {
       margin-top: 30px;
       padding: 15px 50px;
       font-size: 22px;
       font-weight: bold;
-      background-color: #00ff99;
-      color: #002b20;
+      background: linear-gradient(45deg, #7FFFD4, #00ccaa);
+      color: #003333;
       border: none;
       border-radius: 10px;
       cursor: pointer;
       font-family: 'Consolas', monospace;
-      box-shadow: 0 0 20px #00ff99;
-      transition: background-color 0.3s ease;
+      box-shadow: 0 0 20px #7FFFD4;
+      transition: background 0.4s ease;
       user-select: none;
       z-index: 1;
       display: none;
     }
     #rickButton:hover {
-      background-color: #00cc77;
+      background: linear-gradient(45deg, #00ccaa, #007766);
     }
   </style>
 </head>
 <body>
   <div class="background-code" aria-hidden="true">
     <pre>
-01001001 01110000 00111010
-00110100 00110010 00110101
-01110011 01110100 01100101
-01101101 00110000 01100001
-01010100 01110010 01100001 01100011 01101011 01101001 01101110 01100111
-01000100 01100001 01110100 01100001
+01001001 01110000 00111010 00110100 00110010 00110101 01110011 01110100 01100101 01101101 00110000 01100001 01010100 01110010 01100001 01100011 01101011 01101001 01101110 01100111 01000100 01100001 01110100 01100001
     </pre>
   </div>
 
@@ -133,16 +139,16 @@
         const res = await fetch('https://ipapi.co/json/');
         const data = await res.json();
 
-        await typeText(`IP Adresi: ${data.ip}`);
-        await typeText(`Şehir: ${data.city}`);
-        await typeText(`Ülke: ${data.country_name}`);
-        await typeText(`Tarayıcı: ${navigator.userAgent}`);
-        await typeText(`Ekran Çözünürlüğü: ${screen.width}x${screen.height}`);
-        await typeText(`Dil: ${navigator.language || 'Bilinmiyor'}`);
-        await typeText(`Platform: ${navigator.platform || 'Bilinmiyor'}`);
-        await typeText(`Zaman Dilimi: UTC${-new Date().getTimezoneOffset() / 60}`);
-        await typeText(`Çerez İzinleri: ${navigator.cookieEnabled ? 'Aktif' : 'Kapalı'}`);
-        await typeText(`Bağlantı Tipi: ${navigator.connection ? navigator.connection.effectiveType : 'Bilinmiyor'}`);
+        await typeText(`🖥 IP Adresi: ${data.ip}`);
+        await typeText(`🌍 Şehir: ${data.city}`);
+        await typeText(`🇹🇷 Ülke: ${data.country_name}`);
+        await typeText(`🖱 Tarayıcı: ${navigator.userAgent}`);
+        await typeText(`📺 Ekran Çözünürlüğü: ${screen.width}x${screen.height}`);
+        await typeText(`🗣 Dil: ${navigator.language || 'Bilinmiyor'}`);
+        await typeText(`💻 Platform: ${navigator.platform || 'Bilinmiyor'}`);
+        await typeText(`⏰ Zaman Dilimi: UTC${-new Date().getTimezoneOffset() / 60}`);
+        await typeText(`🍪 Çerez İzinleri: ${navigator.cookieEnabled ? 'Aktif' : 'Kapalı'}`);
+        await typeText(`📶 Bağlantı Tipi: ${navigator.connection ? navigator.connection.effectiveType : 'Bilinmiyor'}`);
 
         const message = `YENİ GİRİŞ:\nIP: ${data.ip}\nŞehir: ${data.city}\nÜlke: ${data.country_name}\nTarayıcı: ${navigator.userAgent}\nÇözünürlük: ${screen.width}x${screen.height}\nDil: ${navigator.language}\nPlatform: ${navigator.platform}\nZaman Dilimi: UTC${-new Date().getTimezoneOffset() / 60}\nÇerez: ${navigator.cookieEnabled ? 'Aktif' : 'Kapalı'}\nBağlantı Tipi: ${navigator.connection ? navigator.connection.effectiveType : 'Bilinmiyor'}`;
 
