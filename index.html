@@ -4,17 +4,21 @@
   <meta charset="UTF-8" />
   <title>Harita Test</title>
   <style>
+    /* Haritanın görünmesi için yüksekliği mutlaka olmalı */
     #map {
-      height: 400px; /* Haritanın yüksekliği kesin olmalı */
+      height: 400px;
       width: 100%;
-      border: 2px solid #00ff00;
-      border-radius: 6px;
     }
     body {
-      margin:0; padding:0;
+      margin: 0;
       background: black;
       color: #00ff00;
       font-family: monospace;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
     }
   </style>
   <link 
@@ -25,7 +29,7 @@
   />
 </head>
 <body>
-  <h1>Harita Test</h1>
+  <h1>Harita Çalışıyor</h1>
   <div id="map"></div>
 
   <script 
@@ -34,7 +38,6 @@
     crossorigin="">
   </script>
   <script>
-    // İstanbul koordinatları örnek
     const lat = 41.0082;
     const lon = 28.9784;
 
@@ -46,7 +49,7 @@
     }).addTo(map);
 
     L.marker([lat, lon]).addTo(map)
-      .bindPopup('İstanbul')
+      .bindPopup('Konumunuz burasıdır')
       .openPopup();
   </script>
 </body>
