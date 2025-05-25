@@ -5,10 +5,10 @@
   <title>Giriş Kontrolü</title>
   <style>
     body {
-      background-color: black;
-      color: lime;
-      font-family: 'Courier New', monospace;
-      font-size: 18px;
+      background-color: #f0f0f0; /* Açık gri zemin */
+      color: #222; /* Koyu gri metin */
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 20px;
       margin: 0;
       overflow: hidden;
     }
@@ -19,22 +19,15 @@
       overflow-y: auto;
       position: relative;
       z-index: 1;
+      line-height: 1.6; /* Daha rahat okunur satır aralığı */
+      background: #fff;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      max-width: 600px;
+      margin: 40px auto;
+      border-radius: 8px;
     }
     .background-code {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      color: rgba(0,255,0,0.1);
-      font-size: 12px;
-      animation: scroll 10s linear infinite;
-      z-index: 0;
-    }
-    @keyframes scroll {
-      0% { transform: translateY(0); }
-      100% { transform: translateY(-100%); }
+      display: none; /* Arka plan kodu gizlendi, istersen açabiliriz */
     }
     #rickButton {
       display: none;
@@ -42,29 +35,27 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      padding: 10px 20px;
-      font-size: 18px;
-      background-color: lime;
-      color: black;
+      padding: 20px 40px;
+      font-size: 28px;
+      background-color: #0078D7; /* Canlı mavi */
+      color: white;
       border: none;
       cursor: pointer;
-      font-family: 'Courier New', monospace;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       z-index: 1000;
-      border-radius: 5px;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0, 120, 215, 0.4);
+      transition: background-color 0.3s ease;
+    }
+    #rickButton:hover {
+      background-color: #005a9e;
     }
   </style>
 </head>
 <body>
-  <div class="background-code">
-    <pre>
-01001001 01110000 00111010
-00110100 00110010 00110101
-01110011 01110100 01100101
-01101101 00110000 01100001
-    </pre>
-  </div>
 
   <div id="terminal"></div>
+
   <button id="rickButton" onclick="window.location.href='https://www.youtube.com/watch?v=dQw4w9WgXcQ'">
     Tıklamaya cesaretin var mı?
   </button>
