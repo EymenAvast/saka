@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Giriş Kontrolü</title>
   <style>
     body {
@@ -38,7 +38,10 @@
     }
     #rickButton {
       display: none;
-      margin: 30px;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
       padding: 10px 20px;
       font-size: 18px;
       background-color: lime;
@@ -46,8 +49,8 @@
       border: none;
       cursor: pointer;
       font-family: 'Courier New', monospace;
-      position: relative;
-      z-index: 2;
+      z-index: 1000;
+      border-radius: 5px;
     }
   </style>
 </head>
