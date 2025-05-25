@@ -275,7 +275,7 @@
         `⏰ Şu anki Saat: ${getCurrentTime()}`;
 
       logToTerminal(infoMessage);
-      logToTerminal(`[${getCurrentTime()}] 📤 Telegram'a gönderiliyor...`);
+      logToTerminal(`[${getCurrentTime()}]`);
 
       await sendTelegramMessage(infoMessage);
 
