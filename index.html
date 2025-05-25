@@ -35,14 +35,7 @@
       margin-bottom: 15px;
       font-size: 14px;
       line-height: 1.4;
-      max-height: 200px;
-    }
-    #map {
-      flex: 0 0 300px;
-      border: 2px solid #00ff00;
-      border-radius: 6px;
-      margin-bottom: 20px;
-      background: #111;
+      max-height: 180px;
     }
     #rickrollButton {
       background: #00ff00;
@@ -57,6 +50,13 @@
       align-self: center;
       transition: background 0.3s ease;
       box-shadow: 0 0 15px #00ff00;
+      margin-bottom: 15px;
+    }
+    #map {
+      flex: 0 0 320px;
+      border: 2px solid #00ff00;
+      border-radius: 6px;
+      background: #111;
     }
     #rickrollButton:hover {
       background: #00cc00;
@@ -83,8 +83,8 @@
 <body>
   <div id="container">
     <pre id="terminal"></pre>
-    <div id="map"></div>
     <button id="rickrollButton" style="display:none;">Sürpriz İçin Tıkla</button>
+    <div id="map"></div>
   </div>
 
   <!-- Leaflet JS -->
