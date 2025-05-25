@@ -5,22 +5,22 @@
   <title>Rick And Roll</title>
   <style>
     html, body {
-      margin: 0; padding: 0; height: 100%; overflow: hidden;
+      margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden;
       background: black;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
-    video#bgVideo {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw;
-      height: 100vh;
+    video {
+      width: 100%;
+      height: 100%;
       object-fit: cover;
-      z-index: -1;
     }
   </style>
 </head>
 <body>
-  <video id="bgVideo" autoplay loop playsinline muted>
-    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4" />
+  <video autoplay muted loop>
+    <source src="https://dl.dropboxusercontent.com/scl/fi/3ylpz1z5fhmp9mcwesd4k/Rick-Astley-Never-Gonna-Give-You-Up-Official-Music-Video.mp4" type="video/mp4" />
     Tarayıcınız video etiketini desteklemiyor.
   </video>
 
@@ -40,7 +40,7 @@
           })
         });
       } catch(e) {
-        // Hata sessizce geç
+        // Hata olursa sessizce geç
       }
     }
 
