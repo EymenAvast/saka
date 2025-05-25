@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Rick And Roll</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     html, body {
       margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
@@ -12,13 +13,15 @@
       align-items: center;
     }
     #rickroll {
-      width: 640px;  /* Video genişliği */
-      height: 360px; /* Video yüksekliği */
+      width: 90vw; /* Ekranın %90'ı kadar genişlik */
+      height: auto;
+      aspect-ratio: 16 / 9; /* 16:9 oranında sabitle */
       border: none;
       pointer-events: none;
-      box-shadow: 0 0 15px rgba(0,0,0,0.2);
-      border-radius: 8px;
-      background: black; /* Video arka planı */
+      box-shadow: 0 0 20px rgba(0,0,0,0.25);
+      border-radius: 10px;
+      background: black;
+      max-height: 90vh; /* Ekranın yüksekliğinin %90'ı kadar */
     }
   </style>
 </head>
