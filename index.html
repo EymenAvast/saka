@@ -5,7 +5,7 @@
   <title>Giriş Kontrolü</title>
   <style>
     body {
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      background: linear-gradient(135deg, #010a13, #0a1e2c, #14344f);
       color: #00ff99;
       font-family: 'Consolas', monospace;
       font-size: 18px;
@@ -16,18 +16,21 @@
       justify-content: center;
       align-items: center;
       overflow: hidden;
+      position: relative;
     }
     #terminal {
-      background: rgba(0, 0, 0, 0.7);
+      background: rgba(0, 0, 0, 0.85);
       border: 2px solid #00ff99;
-      border-radius: 12px;
+      border-radius: 15px;
       padding: 30px 40px;
       width: 90%;
       max-width: 700px;
       min-height: 300px;
       overflow-y: auto;
       white-space: pre-line;
-      box-shadow: 0 0 15px #00ff99;
+      box-shadow: 0 0 25px #00ff99;
+      z-index: 2;
+      position: relative;
     }
     .background-code {
       position: fixed;
@@ -36,38 +39,42 @@
       width: 100%;
       height: 100%;
       pointer-events: none;
-      color: rgba(0, 255, 153, 0.1);
-      font-size: 14px;
-      animation: scroll 20s linear infinite;
-      z-index: 0;
+      color: rgba(0, 255, 153, 0.12);
+      font-size: 16px;
       font-family: monospace;
       user-select: none;
-      line-height: 1.3;
-      padding: 20px;
+      line-height: 1.4;
+      padding: 30px;
+      animation: scroll 15s linear infinite alternate;
+      filter: drop-shadow(0 0 4px #00ff99);
+      z-index: 1;
     }
     @keyframes scroll {
       0% { transform: translateY(0); }
-      100% { transform: translateY(-100%); }
+      100% { transform: translateY(-50%); }
     }
     #rickButton {
-      margin-top: 30px;
-      padding: 15px 50px;
-      font-size: 22px;
-      font-weight: bold;
+      margin-top: 35px;
+      padding: 20px 60px;
+      font-size: 24px;
+      font-weight: 900;
       background-color: #00ff99;
       color: #002b20;
       border: none;
-      border-radius: 10px;
+      border-radius: 14px;
       cursor: pointer;
       font-family: 'Consolas', monospace;
-      box-shadow: 0 0 20px #00ff99;
-      transition: background-color 0.3s ease;
+      box-shadow: 0 0 30px #00ff99;
+      transition: background-color 0.25s ease, transform 0.2s ease;
       user-select: none;
-      z-index: 1;
+      z-index: 3;
       display: none;
+      position: relative;
     }
     #rickButton:hover {
       background-color: #00cc77;
+      transform: scale(1.08);
+      box-shadow: 0 0 40px #00ff99, 0 0 20px #00cc77;
     }
   </style>
 </head>
