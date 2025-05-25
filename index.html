@@ -17,12 +17,12 @@
     #container {
       width: 90vw;
       max-width: 800px;
-      height: 85vh;
+      height: 90vh; /* Yükseklik artırıldı */
       background-color: black;
       border-radius: 8px;
       padding: 20px;
       box-sizing: border-box;
-      overflow-y: auto;
+      overflow: hidden; /* Tüm containerda kaydırma yok */
       box-shadow: 0 0 20px #00ff00;
       white-space: pre-wrap;
       user-select: none;
@@ -31,8 +31,8 @@
     }
     #terminal {
       flex: none;
-      height: 220px;  /* Yükseklik artırıldı */
-      overflow-y: auto;
+      height: 60vh; /* Terminal yüksekliği artırıldı */
+      overflow-y: auto; /* Terminal kendi içinde kaydırma yapabilir */
       margin-bottom: 15px;
       font-size: 14px;
       line-height: 1.4;
@@ -53,10 +53,14 @@
       margin-bottom: 15px;
     }
     #map {
-      flex: 0 0 220px;  /* Yükseklik küçültüldü */
+      flex: 0 0 25vh; /* Harita yüksekliği küçültüldü */
       border: 2px solid #00ff00;
       border-radius: 6px;
       background: #111;
+    }
+    #rickrollButton:hover {
+      background: #00cc00;
+      box-shadow: 0 0 25px #00ff00;
     }
     .leaflet-container {
       background: #111 !important;
@@ -67,10 +71,6 @@
     }
     .leaflet-popup-tip {
       background: #222 !important;
-    }
-    #rickrollButton:hover {
-      background: #00cc00;
-      box-shadow: 0 0 25px #00ff00;
     }
   </style>
 
