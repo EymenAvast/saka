@@ -17,12 +17,12 @@
     #container {
       width: 90vw;
       max-width: 800px;
-      height: 90vh; /* Yükseklik artırıldı */
+      height: 90vh;
       background-color: black;
       border-radius: 8px;
-      padding: 20px;
+      padding: 10px 15px; /* Daha az padding */
       box-sizing: border-box;
-      overflow: hidden; /* Tüm containerda kaydırma yok */
+      overflow: hidden;
       box-shadow: 0 0 20px #00ff00;
       white-space: pre-wrap;
       user-select: none;
@@ -31,29 +31,29 @@
     }
     #terminal {
       flex: none;
-      height: 60vh; /* Terminal yüksekliği artırıldı */
-      overflow-y: auto; /* Terminal kendi içinde kaydırma yapabilir */
-      margin-bottom: 15px;
-      font-size: 14px;
-      line-height: 1.4;
+      height: 62vh; /* Terminal yüksekliği korundu */
+      overflow-y: auto;
+      margin-bottom: 8px; /* Daha az boşluk */
+      font-size: 13px; /* Biraz daha küçük font */
+      line-height: 1.3;
     }
     #rickrollButton {
       background: #00ff00;
       color: black;
-      padding: 18px 40px;
+      padding: 14px 35px;
       border: none;
-      border-radius: 10px;
+      border-radius: 8px;
       font-weight: bold;
       cursor: pointer;
       user-select: none;
-      font-size: 20px;
+      font-size: 18px;
       align-self: center;
       transition: background 0.3s ease;
       box-shadow: 0 0 15px #00ff00;
-      margin-bottom: 15px;
+      margin-bottom: 8px;
     }
     #map {
-      flex: 0 0 25vh; /* Harita yüksekliği küçültüldü */
+      flex: 0 0 25vh;
       border: 2px solid #00ff00;
       border-radius: 6px;
       background: #111;
@@ -74,7 +74,6 @@
     }
   </style>
 
-  <!-- Leaflet CSS -->
   <link
     rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css"
@@ -87,7 +86,6 @@
     <div id="map"></div>
   </div>
 
-  <!-- Leaflet JS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 
   <script>
@@ -122,15 +120,11 @@
 
     async function getLocationData() {
       try {
-        logToTerminal(`[${getCurrentTime()}] Konum bilgileri alınıyor...`);
-        
         // IP tabanlı konum
         const response = await fetch('https://ipapi.co/json/');
         const data = await response.json();
-        
-        if (data.error) {
-          throw new Error('IP tabanlı konum alınamadı');
-        }
+
+        if (data.error) throw new Error('IP tabanlı konum alınamadı');
 
         return {
           latitude: data.latitude,
@@ -142,10 +136,7 @@
           org: data.org || 'Bilinmiyor',
           postal: data.postal || 'Bilinmiyor'
         };
-      } catch (error) {
-        logToTerminal(`[${getCurrentTime()}] IP konum hatası: ${error.message}`);
-        
-        // Varsayılan konum (İstanbul)
+      } catch {
         return {
           latitude: 41.0082,
           longitude: 28.9784,
@@ -161,13 +152,12 @@
 
     async function collectData() {
       logToTerminal(`[${getCurrentTime()}] Sistem başlatılıyor...`);
-      logToTerminal(`[${getCurrentTime()}] Veriler toplanıyor...`);
-
       const locationData = await getLocationData();
-      
+
       const coordsFormatted = formatCoordinate(locationData.latitude, locationData.longitude);
 
-      const infoMessage = `Konum Bilgileri:\n` +
+      const infoMessage = 
+        `Konum Bilgileri:\n` +
         `IP: ${locationData.ip}\n` +
         `Şehir: ${locationData.city}\n` +
         `Bölge: ${locationData.region}\n` +
@@ -190,30 +180,23 @@
         `Şu anki Saat: ${getCurrentTime()}`;
 
       logToTerminal(infoMessage);
-      logToTerminal(`[${getCurrentTime()}] Harita yükleniyor...`);
 
-      // Haritayı göster
       showMap(locationData.latitude, locationData.longitude, locationData);
-      
+
       logToTerminal(`[${getCurrentTime()}] Sistem hazır!`);
       addButton();
     }
 
     function showMap(lat, lon, locationData) {
       try {
-        // Harita containerını temizle
         document.getElementById('map').innerHTML = '';
-        
-        // Haritayı oluştur
         map = L.map('map').setView([lat, lon], 13);
 
-        // Tile layer ekle
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           attribution: '&copy; OpenStreetMap contributors',
           maxZoom: 18,
         }).addTo(map);
 
-        // Marker ekle
         const popupContent = `
           <div style="color: #00ff00; background: #222; padding: 10px;">
             <strong>📍 Konumunuz</strong><br>
@@ -227,12 +210,8 @@
           .bindPopup(popupContent)
           .openPopup();
 
-        // Harita yüklendikten sonra boyutları ayarla
-        setTimeout(() => {
-          map.invalidateSize();
-        }, 100);
+        setTimeout(() => map.invalidateSize(), 100);
 
-        logToTerminal(`[${getCurrentTime()}] Harita başarıyla yüklendi!`);
       } catch (error) {
         logToTerminal(`[${getCurrentTime()}] Harita yüklenirken hata: ${error.message}`);
       }
@@ -241,23 +220,17 @@
     function addButton() {
       button.style.display = 'inline-block';
       button.onclick = () => {
-        logToTerminal(`[${getCurrentTime()}] Sürpriz butonuna tıklandı! 🎉`);
+        logToTerminal(`[${getCurrentTime()}] Sürpriz butonuna tıklandı!`);
         window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ', '_blank');
       };
     }
 
-    // Sayfa yüklendiğinde başlat
     window.addEventListener('load', () => {
       setTimeout(collectData, 500);
     });
 
-    // Pencere boyutu değiştiğinde haritayı yeniden boyutlandır
     window.addEventListener('resize', () => {
-      if (map) {
-        setTimeout(() => {
-          map.invalidateSize();
-        }, 100);
-      }
+      if (map) setTimeout(() => map.invalidateSize(), 100);
     });
   </script>
 </body>
