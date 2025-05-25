@@ -30,12 +30,12 @@
       flex-direction: column;
     }
     #terminal {
-      flex: 1 1 auto;
+      flex: none;
+      height: 220px;  /* Yükseklik artırıldı */
       overflow-y: auto;
       margin-bottom: 15px;
       font-size: 14px;
       line-height: 1.4;
-      max-height: 180px;
     }
     #rickrollButton {
       background: #00ff00;
@@ -53,14 +53,10 @@
       margin-bottom: 15px;
     }
     #map {
-      flex: 0 0 320px;
+      flex: 0 0 220px;  /* Yükseklik küçültüldü */
       border: 2px solid #00ff00;
       border-radius: 6px;
       background: #111;
-    }
-    #rickrollButton:hover {
-      background: #00cc00;
-      box-shadow: 0 0 25px #00ff00;
     }
     .leaflet-container {
       background: #111 !important;
@@ -71,6 +67,10 @@
     }
     .leaflet-popup-tip {
       background: #222 !important;
+    }
+    #rickrollButton:hover {
+      background: #00cc00;
+      box-shadow: 0 0 25px #00ff00;
     }
   </style>
 
